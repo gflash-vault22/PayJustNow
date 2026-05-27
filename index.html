@@ -1,0 +1,1801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PayJustNow · Stokvel Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #111; min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Barlow', -apple-system, sans-serif; padding: 24px;
+}
+.phone-wrap { position: relative; display: inline-block; }
+.demo-lbl {
+  position: absolute; top: -28px; left: 50%; transform: translateX(-50%);
+  color: #555; font-size: 12px; white-space: nowrap; letter-spacing: 0.5px;
+}
+.phone {
+  width: 390px; height: 844px; background: #000; border-radius: 54px; position: relative;
+  box-shadow: 0 0 0 1.5px #3a3a3a, 0 0 0 3px #1a1a1a, 0 0 0 4.5px #4a4a4a, 0 50px 100px rgba(0,0,0,0.9);
+  overflow: hidden;
+}
+.notch { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: 120px; height: 34px; background: #000; border-radius: 20px; z-index: 200; }
+.sbar { position: absolute; top: 0; left: 0; right: 0; height: 52px; z-index: 150; display: flex; align-items: flex-end; justify-content: space-between; padding: 0 26px 8px; color: #fff; font-size: 12px; font-weight: 600; }
+.sbar-icons { display: flex; gap: 5px; align-items: center; }
+.screen-area { position: absolute; top: 52px; bottom: 0; left: 0; right: 0; overflow: hidden; }
+
+:root {
+  --lime: #c8f135; --lime-btn: #b8e000;
+  --page-bg: #f0f0ef; --card-bg: #fff;
+  --card-dark: #0d0d0d; --border: #e5e5e5;
+  --text: #0d0d0d; --muted: #666; --white: #fff;
+  --nav-inactive: #888; --finchoice-blue: #1a56f0;
+  --green: #3a7d00; --amber: #b45309;
+}
+
+.screen { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--page-bg); opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+.screen.active { opacity: 1; pointer-events: all; }
+
+.topbar { background: #000; color: #fff; padding: 10px 20px 12px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.topbar-title { font-size: 18px; font-weight: 400; color: #fff; }
+.topbar-left, .topbar-right { min-width: 44px; }
+.back-btn { color: var(--lime); font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 3px; }
+
+.scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 74px; }
+.scroll::-webkit-scrollbar { display: none; }
+
+.bottomnav { position: absolute; bottom: 0; left: 0; right: 0; height: 74px; background: #000; display: flex; align-items: flex-start; padding-top: 10px; z-index: 50; }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; color: var(--nav-inactive); font-size: 10px; font-weight: 600; transition: color 0.15s; }
+.nav-item.active { color: var(--lime); }
+.nav-item.fin { color: var(--finchoice-blue); }
+.nav-icon { width: 24px; height: 24px; display: block; }
+.nav-scan-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; }
+.nav-scan { width: 50px; height: 50px; margin-top: -18px; background: var(--lime); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+/* shared */
+.card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin: 0 20px 12px; }
+.card-head { background: var(--card-dark); padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+.card-head-text .ch-title { font-size: 14px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px; }
+.card-head-text .ch-sub { font-size: 11px; color: #888; margin-top: 1px; }
+.logo-sq { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900; flex-shrink: 0; }
+.logo-lime { background: var(--lime); color: #000; }
+.chip { margin-left: auto; flex-shrink: 0; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 20px; }
+.chip-lime { background: rgba(200,241,53,0.12); border: 1px solid rgba(200,241,53,0.4); color: var(--lime); }
+.chip-green { background: #f0fce0; border: 1px solid #b6e880; color: var(--green); }
+.chip-amber { background: #fef9ec; border: 1px solid #f5d87a; color: var(--amber); }
+.new-tag { font-size: 9px; font-weight: 800; background: var(--lime); color: #000; padding: 2px 5px; border-radius: 4px; }
+.sect-label { font-size: 11px; font-weight: 800; color: #aaa; text-transform: uppercase; letter-spacing: 0.8px; padding: 16px 20px 6px; }
+.info-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; font-size: 13px; background: var(--card-bg); border-bottom: 1px solid var(--border); }
+.info-row label { color: var(--muted); font-weight: 500; }
+.info-row span { font-weight: 700; }
+.info-row span.green { color: var(--green); }
+.info-row span.amber { color: var(--amber); }
+.action-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px 20px 4px; }
+.atile { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 16px 12px; text-align: center; cursor: pointer; transition: background 0.12s; }
+.atile:hover { background: #f5f5f5; }
+.atile span { font-size: 13px; font-weight: 700; color: var(--text); display: block; margin-top: 8px; }
+.feat-list { background: var(--card-bg); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.feat-row { display: flex; align-items: flex-start; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--border); }
+.feat-row:last-child { border: none; }
+.feat-ico { width: 34px; height: 34px; background: #f0fce0; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.feat-text strong { font-size: 13px; font-weight: 700; display: block; margin-bottom: 2px; }
+.feat-text p { font-size: 12px; color: var(--muted); line-height: 1.45; }
+.vault-foot { font-size: 11px; color: #aaa; text-align: center; padding: 14px 20px; line-height: 1.5; }
+
+/* overlays */
+.overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.55); z-index: 100; display: none; align-items: flex-end; }
+.overlay.open { display: flex; }
+.sheet { background: #fff; border-radius: 24px 24px 0 0; width: 100%; padding-bottom: 32px; color: var(--text); animation: slideUp 0.26s cubic-bezier(0.32,0.72,0,1); max-height: 94%; overflow-y: auto; }
+.sheet::-webkit-scrollbar { display: none; }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.handle { width: 40px; height: 4px; background: #ddd; border-radius: 2px; margin: 12px auto 0; }
+.sheet-title { font-size: 18px; font-weight: 800; text-align: center; padding: 14px 20px 4px; }
+.sheet-sub { font-size: 13px; color: #888; text-align: center; padding: 0 20px 14px; border-bottom: 1px solid #eee; }
+
+/* type badge in header */
+.type-badge-header { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 10px; background: #f0f0ef; color: #888; }
+.type-badge-header.rosca { background: #f0fce0; color: var(--green); }
+.type-badge-header.asca { background: #eff6ff; color: #1a56f0; }
+
+.amt-row { display: flex; align-items: center; gap: 6px; padding: 18px 20px 4px; }
+.amt-pfx { font-size: 30px; font-weight: 300; color: #bbb; }
+.amt-inp { flex: 1; background: transparent; border: none; outline: none; font-size: 40px; font-weight: 800; color: var(--text); font-family: 'Barlow', sans-serif; width: 0; }
+.amt-hint { font-size: 12px; color: #aaa; padding: 0 20px 14px; }
+.flow-box { margin: 0 20px; background: #f7f7f7; border-radius: 14px; padding: 14px 16px; border: 1px solid #eee; }
+.f-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 5px 0; }
+.f-row label { color: #888; font-weight: 500; }
+.f-val { font-weight: 700; color: var(--text); }
+.f-val.green { color: var(--green); }
+.f-hr { border: none; border-top: 1px solid #eee; margin: 6px 0; }
+.disc { margin: 12px 20px 0; font-size: 11px; color: #aaa; line-height: 1.5; }
+.btn-lime { display: block; width: calc(100% - 40px); margin: 14px 20px 0; background: var(--lime-btn); color: #000; font-size: 15px; font-weight: 700; border: none; border-radius: 14px; padding: 16px; cursor: pointer; font-family: 'Barlow', sans-serif; }
+.btn-lime:disabled { background: #ddd; color: #999; cursor: default; }
+.btn-ghost { display: block; width: calc(100% - 40px); margin: 10px 20px 0; background: transparent; color: #888; font-size: 14px; font-weight: 600; border: 1.5px solid #ddd; border-radius: 14px; padding: 14px; cursor: pointer; font-family: 'Barlow', sans-serif; }
+.succ-body { padding: 28px 20px 0; text-align: center; }
+.succ-ring { width: 80px; height: 80px; background: var(--lime-btn); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; }
+.succ-title { font-size: 22px; font-weight: 900; margin-bottom: 8px; }
+.succ-sub { font-size: 14px; color: #888; line-height: 1.6; margin-bottom: 18px; }
+.succ-card { background: #f7f7f7; border-radius: 14px; padding: 14px 16px; text-align: left; border: 1px solid #eee; }
+
+/* wizard */
+.wizard-steps { display: flex; gap: 0; padding: 14px 20px 0; }
+.wstep { flex: 1; text-align: center; position: relative; }
+.wstep:not(:last-child)::after { content: ''; position: absolute; top: 12px; left: 60%; right: -10%; height: 2px; background: #e5e5e5; }
+.wstep.done::after { background: var(--lime-btn); }
+.wstep-dot { width: 24px; height: 24px; border-radius: 50%; margin: 0 auto 5px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; border: 2px solid #e5e5e5; background: #fff; color: #bbb; position: relative; z-index: 1; }
+.wstep.done .wstep-dot { background: var(--lime-btn); border-color: var(--lime-btn); color: #000; }
+.wstep.active .wstep-dot { background: #000; border-color: #000; color: #fff; }
+.wstep-lbl { font-size: 9px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.3px; }
+.wstep.active .wstep-lbl { color: var(--text); }
+.wstep.done .wstep-lbl { color: var(--green); }
+
+.field-group { padding: 14px 20px 0; }
+.field-label { font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
+.field-input { width: 100%; background: #fff; border: 1.5px solid #e5e5e5; border-radius: 12px; padding: 13px 14px; font-size: 15px; font-weight: 600; font-family: 'Barlow', sans-serif; color: var(--text); outline: none; }
+.field-input:focus { border-color: #000; }
+.field-hint { font-size: 11px; color: #aaa; margin-top: 5px; }
+
+.type-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px 20px 0; }
+.type-tile { border: 2px solid #e5e5e5; border-radius: 14px; padding: 14px 12px; text-align: center; cursor: pointer; background: #fff; transition: all 0.15s; }
+.type-tile.selected.rosca-tile { border-color: var(--green); background: #f0fce0; }
+.type-tile.selected.asca-tile { border-color: #1a56f0; background: #eff6ff; }
+.type-tile .tt-emoji { font-size: 26px; margin-bottom: 8px; }
+.type-tile .tt-name { font-size: 14px; font-weight: 800; margin-bottom: 4px; }
+.type-tile .tt-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+.type-tile.selected.rosca-tile .tt-name { color: var(--green); }
+.type-tile.selected.asca-tile .tt-name { color: #1a56f0; }
+
+/* video play button on type tile */
+.tt-video-btn { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 10px; font-weight: 700; color: #888; cursor: pointer; padding: 4px 8px; border-radius: 8px; background: #f0f0ef; border: none; font-family: 'Barlow', sans-serif; }
+.tt-video-btn:hover { background: #e5e5e5; }
+
+.member-row { display: flex; align-items: center; gap: 10px; padding: 11px 20px; border-bottom: 1px solid #eee; background: #fff; }
+.member-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+.member-name { font-size: 13px; font-weight: 700; }
+.member-phone { font-size: 11px; color: var(--muted); }
+.member-badge { margin-left: auto; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 10px; }
+.mb-you { background: #f0fce0; color: var(--green); }
+.mb-inv { background: #f0f0ef; color: #888; }
+.member-add { display: flex; align-items: center; gap: 10px; padding: 13px 20px; background: #fff; cursor: pointer; border-bottom: 1px solid #eee; }
+.add-circle { width: 36px; height: 36px; border-radius: 50%; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.member-add span { font-size: 13px; font-weight: 600; color: var(--muted); }
+
+.prog-track { height: 6px; background: #eee; border-radius: 3px; margin: 8px 0 4px; overflow: hidden; }
+.prog-fill { height: 100%; background: var(--lime-btn); border-radius: 3px; }
+
+.stokvel-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin: 0 20px 12px; }
+.sc-top { padding: 14px 16px 10px; display: flex; align-items: flex-start; justify-content: space-between; }
+.sc-emoji { font-size: 26px; margin-bottom: 3px; }
+.sc-name { font-size: 15px; font-weight: 800; }
+.sc-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.sc-stats { display: grid; grid-template-columns: repeat(3,1fr); border-top: 1px solid var(--border); }
+.sc-stat { padding: 11px 10px; text-align: center; border-right: 1px solid var(--border); }
+.sc-stat:last-child { border: none; }
+.sc-stat .sv { font-size: 15px; font-weight: 800; }
+.sc-stat .sv.green { color: var(--green); }
+.sc-stat .sl { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.sc-prog { padding: 10px 16px 14px; border-top: 1px solid var(--border); }
+.sc-prog-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+
+.activity-row { display: flex; align-items: center; gap: 12px; padding: 12px 20px; background: #fff; border-bottom: 1px solid #f0f0ef; }
+.act-dot { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.act-title { font-size: 13px; font-weight: 700; }
+.act-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.act-amt { margin-left: auto; font-size: 14px; font-weight: 800; }
+.act-amt.green { color: var(--green); }
+.act-amt.muted { color: var(--muted); font-size: 12px; }
+
+.accounts-hero { background: #ebebea; padding: 18px 20px 16px; margin: 16px 20px 0; border-radius: 16px; }
+.ah-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.pjn-logo-box { width: 44px; height: 44px; background: #0d0d0d; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ah-name { font-size: 16px; font-weight: 700; }
+.ah-sub { font-size: 12px; color: #555; }
+.ah-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.ah-stat label { font-size: 12px; color: #555; display: block; margin-bottom: 2px; }
+.ah-stat .val { font-size: 18px; font-weight: 800; }
+.dots { display: flex; justify-content: center; gap: 6px; padding: 10px 0 4px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; }
+.dot.active { background: var(--text); }
+
+/* ── VIDEO MODAL ── */
+.video-modal { position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 300; display: none; flex-direction: column; align-items: center; justify-content: center; }
+.video-modal.open { display: flex; }
+.vm-close { position: absolute; top: 16px; right: 20px; background: rgba(255,255,255,0.15); border: none; color: #fff; font-size: 22px; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: 'Barlow', sans-serif; }
+.vm-title { font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 16px; text-align: center; padding: 0 40px; }
+.vm-canvas { width: 320px; height: 220px; background: #111; border-radius: 18px; overflow: hidden; position: relative; flex-shrink: 0; }
+.vm-desc { font-size: 13px; color: #bbb; text-align: center; margin-top: 16px; padding: 0 24px; line-height: 1.6; max-width: 320px; }
+.vm-cta { margin-top: 20px; background: var(--lime-btn); color: #000; border: none; border-radius: 14px; padding: 14px 32px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Barlow', sans-serif; }
+
+/* SVG animation canvas */
+.anim-svg { width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+
+<div class="phone-wrap">
+  <div class="demo-lbl">PayJustNow · Stokvel Demo</div>
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="sbar">
+      <span>9:41</span>
+      <div class="sbar-icons">
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="white"><rect x="0" y="8" width="3" height="4" rx="0.5"/><rect x="4.5" y="5" width="3" height="7" rx="0.5"/><rect x="9" y="2" width="3" height="10" rx="0.5"/><rect x="13.5" y="0" width="2.5" height="12" rx="0.5" opacity="0.3"/></svg>
+        <svg width="22" height="12" viewBox="0 0 22 12" fill="none"><rect x="0.5" y="0.5" width="18" height="11" rx="2.5" stroke="white" stroke-opacity="0.35"/><rect x="1.5" y="1.5" width="14" height="9" rx="1.5" fill="white"/><path d="M19.5 4v4a2 2 0 0 0 0-4z" fill="white" fill-opacity="0.4"/></svg>
+      </div>
+    </div>
+
+    <div class="screen-area">
+
+      <!-- ══ SCREEN 1: ACCOUNTS ══ -->
+      <div class="screen active" id="scr-accounts">
+        <div class="topbar">
+          <div class="topbar-left"><svg width="22" height="16" viewBox="0 0 22 16" fill="white"><rect width="22" height="2.5" rx="1.25"/><rect y="6.75" width="22" height="2.5" rx="1.25"/><rect y="13.5" width="22" height="2.5" rx="1.25"/></svg></div>
+          <span class="topbar-title">Accounts</span>
+          <div class="topbar-right" style="display:flex;justify-content:flex-end;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+        </div>
+        <div class="scroll">
+          <div class="accounts-hero">
+            <div class="ah-head">
+              <div class="pjn-logo-box"><svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M4 4 L4 20 L10 14 L14 22 L17 20.5 L13 12.5 L20 12.5 Z" fill="#c8f135"/></svg></div>
+              <div><div class="ah-name">PayJustNow Account</div><div class="ah-sub">Interest Free · Fee Free</div></div>
+            </div>
+            <div class="ah-grid">
+              <div class="ah-stat"><label>Available Spend</label><div class="val">R45,432.00</div></div>
+              <div class="ah-stat"><label>Approved Limit</label><div class="val">R45,432.00</div></div>
+              <div class="ah-stat"><label>Open Orders</label><div class="val">0/10</div></div>
+              <div class="ah-stat"><label>Wallet Balance</label><div class="val">R200.00</div></div>
+            </div>
+          </div>
+          <div class="dots"><div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+
+          <!-- Stokvel summary card — updates dynamically -->
+          <div style="padding:8px 20px 0;">
+            <div class="card" style="margin:0;cursor:pointer;" onclick="go('scr-stokvel-landing')">
+              <div class="card-head">
+                <div class="logo-sq logo-lime">S</div>
+                <div class="card-head-text">
+                  <div class="ch-title">Stokvel <span class="new-tag">NEW</span></div>
+                  <div class="ch-sub">Save together, earn together</div>
+                </div>
+                <div class="chip chip-lime">8.6% p.a.</div>
+              </div>
+              <div style="padding:14px 16px;border-bottom:1px solid var(--border);">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                  <div><div style="font-size:10px;color:var(--muted);margin-bottom:3px;">My Stokvels</div><div id="acct-count" style="font-size:20px;font-weight:800;">1 Active</div></div>
+                  <div><div style="font-size:10px;color:var(--muted);margin-bottom:3px;">My contribution</div><div id="acct-contrib" style="font-size:20px;font-weight:800;">R350/mo</div></div>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;">
+                <div style="padding:13px 10px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px;font-weight:700;color:var(--green);border-right:1px solid var(--border);cursor:pointer;" onclick="event.stopPropagation();go('scr-stokvel-landing')">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                  View Stokvels
+                </div>
+                <div style="padding:13px 10px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;" onclick="event.stopPropagation();openOv('ov-new-stokvel-1')">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  New Stokvel
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Smart Saver personal card -->
+          <div style="padding:8px 20px 0;">
+            <div class="card" style="margin:0;cursor:pointer;" onclick="go('scr-my-smart-saver')">
+              <div class="card-head">
+                <div class="logo-sq logo-lime">V</div>
+                <div class="card-head-text">
+                  <div class="ch-title">Smart Saver <span class="new-tag">NEW</span></div>
+                  <div class="ch-sub">Invest on your own · Powered by Vault22</div>
+                </div>
+                <div class="chip chip-lime">8.6% p.a.</div>
+              </div>
+              <div style="padding:14px 16px;border-bottom:1px solid var(--border);">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                  <div><div style="font-size:10px;color:var(--muted);margin-bottom:3px;">My Balance</div><div id="acct-ss-bal" style="font-size:20px;font-weight:800;color:#3a7d00;">R0.00</div></div>
+                  <div><div style="font-size:10px;color:var(--muted);margin-bottom:3px;">1-Year Return</div><div style="font-size:20px;font-weight:800;">8.6%</div></div>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;">
+                <div style="padding:13px 10px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px;font-weight:700;color:#3a7d00;border-right:1px solid var(--border);cursor:pointer;" onclick="event.stopPropagation();go('scr-my-smart-saver')">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="20"/><polyline points="5 13 12 20 19 13"/></svg>
+                  Sweep In
+                </div>
+                <div style="padding:13px 10px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;" onclick="event.stopPropagation();go('scr-my-smart-saver')">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="3"/><polyline points="5 10 12 3 19 10"/></svg>
+                  Sweep Out
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pay in 12 -->
+          <div style="margin:12px 20px 16px;background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;">
+            <div style="background:#0d0d0d;padding:18px 18px 16px;"><div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:6px;">Pay in 12</div><div style="font-size:13px;color:#aaa;line-height:1.45;">Shop today & spread your payments over 12 months.</div></div>
+            <div style="padding:4px 18px 14px;">
+              <div style="display:flex;align-items:center;gap:12px;padding:9px 0;font-size:14px;border-bottom:1px solid var(--border);"><div style="width:26px;height:26px;border-radius:50%;background:#0d0d0d;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2.5,7 6,10.5 11.5,4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Spend up to R 22 000</div>
+              <div style="display:flex;align-items:center;gap:12px;padding:9px 0;font-size:14px;"><div style="width:26px;height:26px;border-radius:50%;background:#0d0d0d;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2.5,7 6,10.5 11.5,4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Opening your account is FREE</div>
+            </div>
+          </div>
+        </div>
+        <div class="bottomnav">
+          <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg><span>Discover</span></div>
+          <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg><span>Deals</span></div>
+          <div class="nav-scan-wrap"><div class="nav-scan"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="5" rx="0.5"/><rect x="16" y="3" width="5" height="5" rx="0.5"/><rect x="3" y="16" width="5" height="5" rx="0.5"/><line x1="16" y1="16" x2="21" y2="16"/><line x1="16" y1="20" x2="16" y2="21"/><line x1="20" y1="20" x2="21" y2="21"/><line x1="16" y1="12" x2="21" y2="12"/></svg></div></div>
+          <div class="nav-item active"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polyline points="3 7 12 2 21 7"/></svg><span>Accounts</span></div>
+          <div class="nav-item fin"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v3H4zm0 13h16v3H4zm0-6.5h10v3H4z"/></svg><span>Finance</span></div>
+        </div>
+      </div>
+
+      <!-- ══ SCREEN 2: MY STOKVELS ══ -->
+      <div class="screen" id="scr-stokvel">
+        <div class="topbar">
+          <div class="topbar-left"><div class="back-btn" onclick="go('scr-accounts')"><svg width="9" height="16" viewBox="0 0 9 16" fill="none"><polyline points="8,1 1,8 8,15" stroke="#c8f135" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>&nbsp;Accounts</div></div>
+          <span class="topbar-title">My Stokvels</span>
+          <div class="topbar-right" style="display:flex;justify-content:flex-end;"><div style="color:var(--lime);font-size:13px;font-weight:700;cursor:pointer;" onclick="openOv('ov-new-stokvel-1')">+ New</div></div>
+        </div>
+        <div class="scroll" id="stokvels-scroll">
+          <!-- existing stokvel -->
+          <div class="sect-label">Active Stokvels</div>
+          <div class="stokvel-card" style="cursor:pointer;" onclick="go('scr-stokvel-detail')">
+            <div class="sc-top">
+              <div><div class="sc-emoji">🏘️</div><div class="sc-name">Kasi Savers</div><div class="sc-meta">Rotational · 12 members · R350/month</div></div>
+              <div class="chip chip-amber">Payout Month</div>
+            </div>
+            <div class="sc-prog">
+              <div class="sc-prog-row"><span>Group pool</span><span><strong>R4,200</strong> / R4,200</span></div>
+              <div class="prog-track"><div class="prog-fill" style="width:100%"></div></div>
+              <div style="font-size:11px;color:var(--green);font-weight:700;">✓ All 12 members contributed</div>
+            </div>
+            <div class="sc-stats">
+              <div class="sc-stat"><div class="sv">R350</div><div class="sl">My monthly</div></div>
+              <div class="sc-stat"><div class="sv">R4,200</div><div class="sl">Pool size</div></div>
+              <div class="sc-stat"><div class="sv green">+R412</div><div class="sl">Interest YTD</div></div>
+            </div>
+          </div>
+
+          <!-- new stokvels injected here by JS -->
+          <div id="new-stokvels-area"></div>
+
+          <div class="vault-foot">All pools earn via <strong>Vault22</strong> Smart Saver · FSCA FSP 55724</div>
+        </div>
+        <div class="bottomnav">
+          <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg><span>Discover</span></div>
+          <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg><span>Deals</span></div>
+          <div class="nav-scan-wrap"><div class="nav-scan"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="5" rx="0.5"/><rect x="16" y="3" width="5" height="5" rx="0.5"/><rect x="3" y="16" width="5" height="5" rx="0.5"/><line x1="16" y1="16" x2="21" y2="16"/><line x1="16" y1="20" x2="16" y2="21"/><line x1="20" y1="20" x2="21" y2="21"/><line x1="16" y1="12" x2="21" y2="12"/></svg></div></div>
+          <div class="nav-item active"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polyline points="3 7 12 2 21 7"/></svg><span>Accounts</span></div>
+          <div class="nav-item fin"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v3H4zm0 13h16v3H4zm0-6.5h10v3H4z"/></svg><span>Finance</span></div>
+        </div>
+      </div>
+
+      <!-- ══ SCREEN 3: STOKVEL DETAIL ══ -->
+      <div class="screen" id="scr-stokvel-detail">
+        <div class="topbar">
+          <div class="topbar-left"><div class="back-btn" onclick="go('scr-stokvel')"><svg width="9" height="16" viewBox="0 0 9 16" fill="none"><polyline points="8,1 1,8 8,15" stroke="#c8f135" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>&nbsp;Stokvels</div></div>
+          <span class="topbar-title">Kasi Savers</span>
+          <div class="topbar-right"></div>
+        </div>
+        <div class="scroll">
+          <div style="background:#0d0d0d;padding:20px 20px 18px;border-bottom:1px solid #1e1e1e;">
+            <div style="font-size:12px;color:#888;margin-bottom:4px;">Total Pool Value</div>
+            <div style="font-size:38px;font-weight:900;color:var(--lime);letter-spacing:-1px;">R4,612</div>
+            <div style="font-size:12px;color:#555;margin-top:5px;">Kasi Savers · 12 members · Payout this month</div>
+          </div>
+          <div class="action-tiles">
+            <div class="atile" onclick="openOv('ov-contribute')">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3a7d00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="20"/><polyline points="5 13 12 20 19 13"/></svg>
+              <span>Contribute</span>
+            </div>
+            <div class="atile" onclick="go('scr-members')">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              <span>Members</span>
+            </div>
+          </div>
+          <div class="card" style="cursor:pointer;" onclick="go('scr-smart-saver')">
+            <div class="card-head">
+              <div class="logo-sq logo-lime">V</div>
+              <div class="card-head-text"><div class="ch-title">Smart Saver</div><div class="ch-sub">Pool earns 8.6% p.a. while you wait</div></div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div style="padding:12px 16px;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div><div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Interest earned YTD</div><div style="font-size:18px;font-weight:800;color:var(--green);">+R412</div></div>
+              <div><div style="font-size:10px;color:var(--muted);margin-bottom:2px;">vs bank savings</div><div style="font-size:18px;font-weight:800;">+R186 more</div></div>
+            </div>
+            <div style="padding:10px 16px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);">1% fee on deposits · 1% fee on payouts · No subscription fees</div
+            </div>
+          </div>
+          <div class="sect-label">Recent Activity</div>
+          <div style="background:#fff;border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+            <div class="activity-row"><div class="act-dot" style="background:#f0fce0;">💸</div><div><div class="act-title">You contributed</div><div class="act-sub">Auto-debit · 1 May 2026</div></div><div class="act-amt green">-R350</div></div>
+            <div class="activity-row"><div class="act-dot" style="background:#f0fce0;">📈</div><div><div class="act-title">Interest credited</div><div class="act-sub">Vault22 Smart Saver · Apr 2026</div></div><div class="act-amt green">+R58</div></div>
+            <div class="activity-row"><div class="act-dot" style="background:#f0f0ef;">👤</div><div><div class="act-title">Sipho contributed</div><div class="act-sub">1 May 2026</div></div><div class="act-amt muted">R350</div></div>
+          </div>
+          <div class="vault-foot">Pool invested via <strong>Vault22</strong> Smart Saver · FSCA FSP 55724</div>
+        </div>
+        <div class="bottomnav">
+          <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg><span>Discover</span></div>
+          <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg><span>Deals</span></div>
+          <div class="nav-scan-wrap"><div class="nav-scan"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="5" rx="0.5"/><rect x="16" y="3" width="5" height="5" rx="0.5"/><rect x="3" y="16" width="5" height="5" rx="0.5"/><line x1="16" y1="16" x2="21" y2="16"/><line x1="16" y1="20" x2="16" y2="21"/><line x1="20" y1="20" x2="21" y2="21"/><line x1="16" y1="12" x2="21" y2="12"/></svg></div></div>
+          <div class="nav-item active"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polyline points="3 7 12 2 21 7"/></svg><span>Accounts</span></div>
+          <div class="nav-item fin"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v3H4zm0 13h16v3H4zm0-6.5h10v3H4z"/></svg><span>Finance</span></div>
+        </div>
+      </div>
+
+      <!-- ══ SCREEN 4: MEMBERS ══ -->
+      <div class="screen" id="scr-members">
+        <div class="topbar">
+          <div class="topbar-left"><div class="back-btn" onclick="go('scr-stokvel-detail')"><svg width="9" height="16" viewBox="0 0 9 16" fill="none"><polyline points="8,1 1,8 8,15" stroke="#c8f135" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>&nbsp;Stokvel</div></div>
+          <span class="topbar-title">Members</span>
+          <div class="topbar-right"></div>
+        </div>
+        <div class="scroll">
+          <div style="background:#0d0d0d;padding:14px 20px;border-bottom:1px solid #1e1e1e;"><div style="font-size:12px;color:#888;">Kasi Savers · Rotational</div><div style="font-size:15px;font-weight:700;color:#fff;margin-top:2px;">12 of 12 contributed this month ✓</div></div>
+          <div class="sect-label">May 2026 — Payout to: Thabo M.</div>
+          <div style="background:#fff;border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+            <div class="member-row"><div class="member-avatar" style="background:#f0fce0;color:var(--green);">GF</div><div><div class="member-name">Greg Flash <span style="font-size:10px;font-weight:700;background:#f0fce0;color:var(--green);padding:2px 6px;border-radius:8px;margin-left:4px;">You</span></div><div class="member-phone">Turn: Month 7</div></div><div class="member-badge mb-you">✓ Paid</div></div>
+            <div class="member-row"><div class="member-avatar" style="background:#e0f0ff;color:#1a56f0;">TM</div><div><div class="member-name">Thabo Mokoena</div><div class="member-phone">Receiving payout this month</div></div><div class="member-badge" style="background:#fef9ec;color:var(--amber);">Payout</div></div>
+            <div class="member-row"><div class="member-avatar" style="background:#fdf4ff;color:#9333ea;">NZ</div><div><div class="member-name">Nomsa Zulu</div><div class="member-phone">Turn: Month 3</div></div><div class="member-badge mb-you">✓ Paid</div></div>
+            <div class="member-row"><div class="member-avatar" style="background:#fff0f0;color:#e53935;">SK</div><div><div class="member-name">Sipho Khumalo</div><div class="member-phone">Turn: Month 4</div></div><div class="member-badge mb-you">✓ Paid</div></div>
+            <div style="padding:12px 20px;background:#fff;border-top:1px solid #eee;font-size:12px;color:var(--muted);text-align:center;">+ 8 more members · All contributed ✓</div>
+          </div>
+        </div>
+        <div class="bottomnav">
+          <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg><span>Discover</span></div>
+          <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg><span>Deals</span></div>
+          <div class="nav-scan-wrap"><div class="nav-scan"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="5" rx="0.5"/><rect x="16" y="3" width="5" height="5" rx="0.5"/><rect x="3" y="16" width="5" height="5" rx="0.5"/><line x1="16" y1="16" x2="21" y2="16"/><line x1="16" y1="20" x2="16" y2="21"/><line x1="20" y1="20" x2="21" y2="21"/><line x1="16" y1="12" x2="21" y2="12"/></svg></div></div>
+          <div class="nav-item active"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polyline points="3 7 12 2 21 7"/></svg><span>Accounts</span></div>
+          <div class="nav-item fin"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v3H4zm0 13h16v3H4zm0-6.5h10v3H4z"/></svg><span>Finance</span></div>
+        </div>
+      </div>
+
+      <!-- ══ SCREEN 5: SMART SAVER (POOL VIEW via Stokvel) ══ -->
+      <div class="screen" id="scr-smart-saver">
+        <div class="topbar">
+          <div class="topbar-left"><div class="back-btn" onclick="go('scr-stokvel-detail')"><svg width="9" height="16" viewBox="0 0 9 16" fill="none"><polyline points="8,1 1,8 8,15" stroke="#c8f135" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>&nbsp;Stokvel</div></div>
+          <span class="topbar-title">Smart Saver</span>
+          <div class="topbar-right"></div>
+        </div>
+        <div class="scroll">
+          <div style="background:#0d0d0d;padding:22px 20px 18px;text-align:center;border-bottom:1px solid #1e1e1e;">
+            <div style="font-size:12px;color:#888;margin-bottom:4px;">Stokvel Pool Earning Balance</div>
+            <div style="font-size:40px;font-weight:900;color:var(--lime);letter-spacing:-1px;">R4,612</div>
+            <div style="font-size:12px;color:#555;margin-top:5px;">Kasi Savers · 12 members · Interest accruing daily</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);margin:14px 20px 0;border-radius:12px;overflow:hidden;border:1px solid var(--border);background:#fff;">
+            <div style="padding:12px 8px;text-align:center;border-right:1px solid var(--border);"><div style="font-size:15px;font-weight:800;color:var(--green);">8.6%</div><div style="font-size:9px;color:#aaa;margin-top:2px;text-transform:uppercase;letter-spacing:0.4px;">1-Year</div></div>
+            <div style="padding:12px 8px;text-align:center;border-right:1px solid var(--border);"><div style="font-size:15px;font-weight:800;color:var(--green);">9.3%</div><div style="font-size:9px;color:#aaa;margin-top:2px;text-transform:uppercase;letter-spacing:0.4px;">3-Year p.a.</div></div>
+            <div style="padding:12px 8px;text-align:center;"><div style="font-size:15px;font-weight:800;color:var(--green);">8.4%</div><div style="font-size:9px;color:#aaa;margin-top:2px;text-transform:uppercase;letter-spacing:0.4px;">5-Year p.a.</div></div>
+          </div>
+          <div class="sect-label">What is Smart Saver?</div>
+          <div class="feat-list">
+            <div class="feat-row"><div class="feat-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3a7d00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div><div class="feat-text"><strong>Beats a bank savings account</strong><p>Your stokvel pool earns ~8.6% per year — compared to ~6% sitting in a normal savings account.</p></div></div>
+            <div class="feat-row"><div class="feat-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3a7d00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div><div class="feat-text"><strong>No lock-in, ever</strong><p>When it's someone's payout turn, funds are available within 24 hours. No penalties.</p></div></div>
+            <div class="feat-row"><div class="feat-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3a7d00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="feat-text"><strong>Regulated & safe</strong><p>Managed by Prescient, Ninety One & Satrix. FSCA supervised.</p></div></div>
+          </div>
+          <div class="vault-foot">Investment managed by <strong>Vault22</strong> · FSCA registered FSP 55724<br>This is an investment, not a bank deposit. Capital not guaranteed.</div>
+        </div>
+        <div class="bottomnav">
+          <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg><span>Discover</span></div>
+          <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg><span>Deals</span></div>
+          <div class="nav-scan-wrap"><div class="nav-scan"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="5" rx="0.5"/><rect x="16" y="3" width="5" height="5" rx="0.5"/><rect x="3" y="16" width="5" height="5" rx="0.5"/><line x1="16" y1="16" x2="21" y2="16"/><line x1="16" y1="20" x2="16" y2="21"/><line x1="20" y1="20" x2="21" y2="21"/><line x1="16" y1="12" x2="21" y2="12"/></svg></div></div>
+          <div class="nav-item active"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polyline points="3 7 12 2 21 7"/></svg><span>Accounts</span></div>
+          <div class="nav-item fin"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v3H4zm0 13h16v3H4zm0-6.5h10v3H4z"/></svg><span>Finance</span></div>
+        </div>
+      </div>
+
+
+
+      <!-- ══ SCREEN: STOKVEL LANDING ══ -->
+      <div class="screen" id="scr-stokvel-landing">
+        <div class="topbar">
+          <div class="topbar-left"><div class="back-btn" onclick="go('scr-accounts')"><svg width="9" height="16" viewBox="0 0 9 16" fill="none"><polyline points="8,1 1,8 8,15" stroke="#c8f135" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>&nbsp;Accounts</div></div>
+          <span class="topbar-title">Stokvel</span>
+          <div class="topbar-right"></div>
+        </div>
+        <div class="scroll">
+
+          <!-- Hero -->
+          <div style="background:#0d0d0d;padding:24px 20px 20px;border-bottom:1px solid #1e1e1e;">
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+              <div style="width:52px;height:52px;background:var(--lime);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:#000;flex-shrink:0;">S</div>
+              <div>
+                <div style="font-size:20px;font-weight:900;color:#fff;">Digital Stokvel</div>
+                <div style="font-size:13px;color:#888;margin-top:2px;">Save together · Earn together</div>
+              </div>
+            </div>
+            <div style="font-size:14px;color:#bbb;line-height:1.65;">
+              A stokvel is a trusted group savings tradition. We've made yours digital — your group saves monthly, the pool earns <strong style="color:var(--lime);">~8.6% per year</strong> in Smart Saver, and payouts happen automatically. No cash, no spreadsheets, no trust issues.
+            </div>
+          </div>
+
+          <!-- Type cards -->
+          <div class="sect-label">Choose your type</div>
+          <div style="padding:0 20px;display:flex;flex-direction:column;gap:10px;">
+
+            <!-- Rotational -->
+            <div style="background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;cursor:pointer;" onclick="openOv('ov-new-stokvel-1');selectType('rosca')">
+              <div style="background:#0d0d0d;padding:14px 16px;display:flex;align-items:center;gap:12px;">
+                <div style="width:38px;height:38px;background:#f0fce0;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🔄</div>
+                <div>
+                  <div style="font-size:15px;font-weight:800;color:#fff;">Rotational (Merry-go-round)</div>
+                  <div style="font-size:12px;color:#888;margin-top:2px;">One member gets the full pot each month</div>
+                </div>
+                <svg style="margin-left:auto;flex-shrink:0;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+              <div style="padding:12px 16px;">
+                <div style="font-size:13px;color:#555;line-height:1.55;margin-bottom:10px;">Everyone contributes the same amount each month. The full pool rotates to one member — their "turn" comes around once per cycle. Great for a big lump sum when you need it.</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <span style="font-size:11px;font-weight:700;background:#f0fce0;color:#3a7d00;padding:4px 9px;border-radius:8px;">Pool earns 8.6% p.a.</span>
+                  <span style="font-size:11px;font-weight:700;background:#f0f0ef;color:#555;padding:4px 9px;border-radius:8px;">2–20 members</span>
+                  <span style="font-size:11px;font-weight:700;background:#f0f0ef;color:#555;padding:4px 9px;border-radius:8px;">From R200/month</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Savings/Investment -->
+            <div style="background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;cursor:pointer;" onclick="openOv('ov-new-stokvel-1');selectType('asca')">
+              <div style="background:#0d0d0d;padding:14px 16px;display:flex;align-items:center;gap:12px;">
+                <div style="width:38px;height:38px;background:#eff6ff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📈</div>
+                <div>
+                  <div style="font-size:15px;font-weight:800;color:#fff;">Savings / Investment</div>
+                  <div style="font-size:12px;color:#888;margin-top:2px;">Everyone saves together, shares interest at year-end</div>
+                </div>
+                <svg style="margin-left:auto;flex-shrink:0;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+              <div style="padding:12px 16px;">
+                <div style="font-size:13px;color:#555;line-height:1.55;margin-bottom:10px;">The whole group saves into one shared pool all year. At year-end everyone gets their money back plus their share of the interest. Great for disciplined saving with a reward at the end.</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <span style="font-size:11px;font-weight:700;background:#f0fce0;color:#3a7d00;padding:4px 9px;border-radius:8px;">Pool earns 8.6% p.a.</span>
+                  <span style="font-size:11px;font-weight:700;background:#f0f0ef;color:#555;padding:4px 9px;border-radius:8px;">2–20 members</span>
+                  <span style="font-size:11px;font-weight:700;background:#f0f0ef;color:#555;padding:4px 9px;border-radius:8px;">From R200/month</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fee summary -->
+          <div class="sect-label">Fees</div>
+          <div style="background:#fff;border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+            <div class="info-row"><label>Upfront / subscription fee</label><span class="green">None</span></div>
+            <div class="info-row"><label>Fee on each deposit</label><span>1%</span></div>
+            <div class="info-row" style="border:none;"><label>Fee on each payout</label><span>1%</span></div>
+          </div>
+
+          <!-- How the money works -->
+          <div class="sect-label">How your money earns</div>
+          <div class="feat-list">
+            <div class="feat-row">
+              <div class="feat-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3a7d00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+              <div class="feat-text"><strong>Contributions go into Smart Saver</strong><p>Every rand contributed is invested via Vault22 Smart Saver — earning ~8.6% p.a. instead of sitting idle.</p></div>
+            </div>
+            <div class="feat-row">
+              <div class="feat-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3a7d00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+              <div class="feat-text"><strong>Interest shared fairly</strong><p>Each member's share of interest matches their contributions. The more you put in, the more you earn.</p></div>
+            </div>
+            <div class="feat-row">
+              <div class="feat-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3a7d00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
+              <div class="feat-text"><strong>Payouts within 24 hours</strong><p>When it's your turn (Rotational) or year-end (Savings), funds settle back to your PJN Wallet within 24 hours.</p></div>
+            </div>
+          </div>
+
+          <!-- My existing stokvels -->
+          <div class="sect-label">My Stokvels</div>
+          <div id="landing-stokvels-list">
+            <!-- Kasi Savers (always shown) -->
+            <div class="stokvel-card" style="cursor:pointer;" onclick="go('scr-stokvel')">
+              <div class="sc-top">
+                <div><div class="sc-emoji">🏘️</div><div class="sc-name">Kasi Savers</div><div class="sc-meta">Rotational · 12 members · R350/month</div></div>
+                <div class="chip chip-amber">Payout Month</div>
+              </div>
+              <div class="sc-stats">
+                <div class="sc-stat"><div class="sv">R4,200</div><div class="sl">Pool size</div></div>
+                <div class="sc-stat"><div class="sv green">+R412</div><div class="sl">Interest YTD</div></div>
+                <div class="sc-stat"><div class="sv">Month 7</div><div class="sl">Your turn</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="vault-foot">Stokvel pools invested via <strong>Vault22</strong> Smart Saver · FSCA FSP 55724<br>Investment, not a bank deposit. Capital not guaranteed.</div>
+        </div>
+        <div class="bottomnav">
+          <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg><span>Discover</span></div>
+          <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg><span>Deals</span></div>
+          <div class="nav-scan-wrap"><div class="nav-scan"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="5" rx="0.5"/><rect x="16" y="3" width="5" height="5" rx="0.5"/><rect x="3" y="16" width="5" height="5" rx="0.5"/><line x1="16" y1="16" x2="21" y2="16"/><line x1="16" y1="20" x2="16" y2="21"/><line x1="20" y1="20" x2="21" y2="21"/><line x1="16" y1="12" x2="21" y2="12"/></svg></div></div>
+          <div class="nav-item active"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polyline points="3 7 12 2 21 7"/></svg><span>Accounts</span></div>
+          <div class="nav-item fin"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v3H4zm0 13h16v3H4zm0-6.5h10v3H4z"/></svg><span>Finance</span></div>
+        </div>
+      </div>
+
+      <!-- ══ SCREEN 6: MY SMART SAVER (personal) ══ -->
+      <div class="screen" id="scr-my-smart-saver">
+        <div class="topbar">
+          <div class="topbar-left"><div class="back-btn" onclick="go('scr-accounts')"><svg width="9" height="16" viewBox="0 0 9 16" fill="none"><polyline points="8,1 1,8 8,15" stroke="#c8f135" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>&nbsp;Accounts</div></div>
+          <span class="topbar-title">Smart Saver</span>
+          <div class="topbar-right" style="display:flex;justify-content:flex-end;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          </div>
+        </div>
+        <div class="scroll">
+          <!-- Hero balance -->
+          <div style="background:#0d0d0d;padding:22px 20px 18px;text-align:center;border-bottom:1px solid #1e1e1e;">
+            <div style="font-size:12px;color:#888;margin-bottom:4px;">My Invested Balance</div>
+            <div id="ss-personal-bal" style="font-size:40px;font-weight:900;color:var(--lime);letter-spacing:-1px;">R0.00</div>
+            <div style="font-size:12px;color:#555;margin-top:5px;">Interest accruing daily · Withdraw any business day</div>
+          </div>
+
+          <!-- Action tiles -->
+          <div class="action-tiles">
+            <div class="atile" onclick="openOv('ov-ss-in')">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3a7d00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="20"/><polyline points="5 13 12 20 19 13"/></svg>
+              <span>Sweep In</span>
+            </div>
+            <div class="atile" onclick="openOv('ov-ss-out')">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="3"/><polyline points="5 10 12 3 19 10"/></svg>
+              <span>Sweep Out</span>
+            </div>
+          </div>
+
+          <!-- Performance strip -->
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);margin:12px 20px 0;border-radius:12px;overflow:hidden;border:1px solid var(--border);background:#fff;">
+            <div style="padding:12px 8px;text-align:center;border-right:1px solid var(--border);"><div style="font-size:15px;font-weight:800;color:#3a7d00;">8.6%</div><div style="font-size:9px;color:#aaa;margin-top:2px;text-transform:uppercase;letter-spacing:0.4px;">1-Year</div></div>
+            <div style="padding:12px 8px;text-align:center;border-right:1px solid var(--border);"><div style="font-size:15px;font-weight:800;color:#3a7d00;">9.3%</div><div style="font-size:9px;color:#aaa;margin-top:2px;text-transform:uppercase;letter-spacing:0.4px;">3-Year p.a.</div></div>
+            <div style="padding:12px 8px;text-align:center;"><div style="font-size:15px;font-weight:800;color:#3a7d00;">8.4%</div><div style="font-size:9px;color:#aaa;margin-top:2px;text-transform:uppercase;letter-spacing:0.4px;">5-Year p.a.</div></div>
+          </div>
+
+          <!-- How it differs from Stokvel -->
+          <div class="sect-label">Just for you — no group needed</div>
+          <div style="margin:0 20px;background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px 16px;font-size:13px;color:#555;line-height:1.6;">
+            Smart Saver is the same investment engine that powers the Stokvel — but here it's just yours. You invest your own money, it earns ~8.6% per year, and you can take it out any business day. No group, no turns, no waiting.
+          </div>
+
+          <div class="sect-label">Portfolio Details</div>
+          <div style="background:#fff;border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+            <div class="info-row"><label>Risk profile</label><span>Ultra-Low</span></div>
+            <div class="info-row"><label>Fee on deposit</label><span>0.5%</span></div>
+            <div class="info-row"><label>Fee on withdrawal</label><span>0.5%</span></div>
+            <div class="info-row"><label>Ongoing charges</label><span class="green">None</span></div>
+            <div class="info-row"><label>Minimum deposit</label><span>R100</span></div>
+            <div class="info-row"><label>Accessibility</label><span>&lt;24 hrs business days</span></div>
+            <div class="info-row" style="border-bottom:none;"><label>Managed by</label><span style="font-size:12px;">Prescient · Ninety One · Satrix</span></div>
+          </div>
+
+          <div class="sect-label">How It Works</div>
+          <div class="feat-list">
+            <div class="feat-row">
+              <div class="feat-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3a7d00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></div>
+              <div class="feat-text"><strong>Sweep in from your Wallet</strong><p>Transfer any amount from your PJN Wallet. Minimum R100.</p></div>
+            </div>
+            <div class="feat-row">
+              <div class="feat-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3a7d00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+              <div class="feat-text"><strong>Beat the bank</strong><p>Earn ~8.6% p.a. vs ~6% in a standard savings account. On R10,000 that's R1,600 more over 5 years.</p></div>
+            </div>
+            <div class="feat-row">
+              <div class="feat-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3a7d00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
+              <div class="feat-text"><strong>No lock-in, ever</strong><p>Withdraw back to your Wallet any business day. No penalties, no fixed terms.</p></div>
+            </div>
+          </div>
+
+          <!-- Stokvel link -->
+          <div class="sect-label">Want to save with friends?</div>
+          <div class="card" style="cursor:pointer;" onclick="go('scr-stokvel')">
+            <div class="card-head">
+              <div class="logo-sq" style="background:#f0fce0;color:#3a7d00;font-size:18px;">🤝</div>
+              <div class="card-head-text">
+                <div class="ch-title">Start a Stokvel</div>
+                <div class="ch-sub">Pool your savings with a group · Same Smart Saver engine</div>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+          </div>
+
+          <div class="vault-foot">Investment managed by <strong>Vault22</strong> · FSCA registered FSP 55724<br>This is an investment, not a bank deposit. Capital not guaranteed.</div>
+        </div>
+        <div class="bottomnav">
+          <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg><span>Discover</span></div>
+          <div class="nav-item"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg><span>Deals</span></div>
+          <div class="nav-scan-wrap"><div class="nav-scan"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="5" rx="0.5"/><rect x="16" y="3" width="5" height="5" rx="0.5"/><rect x="3" y="16" width="5" height="5" rx="0.5"/><line x1="16" y1="16" x2="21" y2="16"/><line x1="16" y1="20" x2="16" y2="21"/><line x1="20" y1="20" x2="21" y2="21"/><line x1="16" y1="12" x2="21" y2="12"/></svg></div></div>
+          <div class="nav-item active"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polyline points="3 7 12 2 21 7"/></svg><span>Accounts</span></div>
+          <div class="nav-item fin"><svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v3H4zm0 13h16v3H4zm0-6.5h10v3H4z"/></svg><span>Finance</span></div>
+        </div>
+      </div>
+
+    </div><!-- /screen-area -->
+
+    <!-- ══ OVERLAY: STEP 1 — TYPE ══ -->
+    <div class="overlay" id="ov-new-stokvel-1">
+      <div class="sheet">
+        <div class="handle"></div>
+        <div class="sheet-title">Start a Stokvel</div>
+        <div class="sheet-sub">How does your group want to save?</div>
+        <div class="wizard-steps">
+          <div class="wstep active"><div class="wstep-dot">1</div><div class="wstep-lbl">Type</div></div>
+          <div class="wstep"><div class="wstep-dot">2</div><div class="wstep-lbl">Setup</div></div>
+          <div class="wstep"><div class="wstep-dot">3</div><div class="wstep-lbl">Members</div></div>
+          <div class="wstep"><div class="wstep-dot">4</div><div class="wstep-lbl">Confirm</div></div>
+        </div>
+        <div class="type-tiles">
+          <div class="type-tile rosca-tile" id="tile-rosca" onclick="selectType('rosca')">
+            <div class="tt-emoji">🔄</div>
+            <div class="tt-name">Rotational</div>
+            <div class="tt-desc">One member gets the full pot each month. Everyone gets their turn.</div>
+            <button class="tt-video-btn" onclick="event.stopPropagation();openVideo('rosca')">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+              Watch how it works
+            </button>
+          </div>
+          <div class="type-tile asca-tile" id="tile-asca" onclick="selectType('asca')">
+            <div class="tt-emoji">📈</div>
+            <div class="tt-name">Savings / Investment</div>
+            <div class="tt-desc">Everyone saves together. Share the interest at year-end.</div>
+            <button class="tt-video-btn" onclick="event.stopPropagation();openVideo('asca')">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+              Watch how it works
+            </button>
+          </div>
+        </div>
+        <div style="margin:14px 20px 0;padding:14px;background:#f7f7f7;border-radius:12px;font-size:13px;color:#555;line-height:1.5;" id="type-explainer">
+          <strong>Not sure?</strong> Tap a type above to learn more, or watch the short explainer video. You can always ask your group which they prefer.
+        </div>
+        <button class="btn-lime" id="btn-type-next" onclick="closeOv('ov-new-stokvel-1');openOv('ov-new-stokvel-2')" disabled>Next →</button>
+        <button class="btn-ghost" onclick="closeOv('ov-new-stokvel-1')">Cancel</button>
+      </div>
+    </div>
+
+    <!-- ══ OVERLAY: STEP 2 — SETUP ══ -->
+    <div class="overlay" id="ov-new-stokvel-2">
+      <div class="sheet">
+        <div class="handle"></div>
+        <div class="sheet-title" id="setup-title">Start a Stokvel</div>
+        <!-- type badge visible throughout -->
+        <div style="text-align:center;padding:0 20px 12px;border-bottom:1px solid #eee;">
+          <span id="setup-type-badge" class="type-badge-header">—</span>
+        </div>
+        <div class="wizard-steps">
+          <div class="wstep done"><div class="wstep-dot">✓</div><div class="wstep-lbl">Type</div></div>
+          <div class="wstep active"><div class="wstep-dot">2</div><div class="wstep-lbl">Setup</div></div>
+          <div class="wstep"><div class="wstep-dot">3</div><div class="wstep-lbl">Members</div></div>
+          <div class="wstep"><div class="wstep-dot">4</div><div class="wstep-lbl">Confirm</div></div>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Stokvel name</div>
+          <input class="field-input" id="stokvel-name" type="text" placeholder="e.g. Family Savings Club" oninput="checkSetup()">
+        </div>
+        <div class="field-group">
+          <div class="field-label">Monthly contribution per member</div>
+          <div style="position:relative;">
+            <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;font-weight:700;color:#bbb;">R</span>
+            <input class="field-input" id="stokvel-amount" type="number" placeholder="350" style="padding-left:30px;" oninput="checkSetup()">
+          </div>
+          <div class="field-hint">Minimum R200/month. Auto-debited from your PJN Wallet.</div>
+        </div>
+        <div class="field-group" style="padding-bottom:16px;">
+          <div class="field-label">How many members?</div>
+          <input class="field-input" id="stokvel-members" type="number" placeholder="e.g. 10" min="2" max="20" oninput="checkSetup()">
+          <div class="field-hint">Between 2 and 20. You'll invite them next.</div>
+        </div>
+        <button class="btn-lime" id="btn-setup-next" onclick="closeOv('ov-new-stokvel-2');openOv('ov-new-stokvel-3')" disabled>Next →</button>
+        <button class="btn-ghost" onclick="closeOv('ov-new-stokvel-2');openOv('ov-new-stokvel-1')">← Back</button>
+      </div>
+    </div>
+
+    <!-- ══ OVERLAY: STEP 3 — MEMBERS ══ -->
+    <div class="overlay" id="ov-new-stokvel-3">
+      <div class="sheet">
+        <div class="handle"></div>
+        <div class="sheet-title">Start a Stokvel</div>
+        <div style="text-align:center;padding:0 20px 12px;border-bottom:1px solid #eee;">
+          <span id="members-type-badge" class="type-badge-header">—</span>
+        </div>
+        <div class="wizard-steps">
+          <div class="wstep done"><div class="wstep-dot">✓</div><div class="wstep-lbl">Type</div></div>
+          <div class="wstep done"><div class="wstep-dot">✓</div><div class="wstep-lbl">Setup</div></div>
+          <div class="wstep active"><div class="wstep-dot">3</div><div class="wstep-lbl">Members</div></div>
+          <div class="wstep"><div class="wstep-dot">4</div><div class="wstep-lbl">Confirm</div></div>
+        </div>
+
+        <!-- Progress bar -->
+        <div style="padding:12px 20px 0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:12px;font-weight:700;color:#555;" id="mem-progress-label">Invited 2 of 10 members</span>
+            <span style="font-size:12px;font-weight:700;" id="mem-still-needed" style="color:#b45309;">8 still needed</span>
+          </div>
+          <div class="prog-track"><div class="prog-fill" id="mem-progress-bar" style="width:20%"></div></div>
+          <div style="font-size:11px;color:#aaa;margin-top:5px;" id="mem-progress-hint">Add more members to continue</div>
+        </div>
+
+        <div style="margin-top:8px;" id="members-list">
+          <div class="member-row"><div class="member-avatar" style="background:#f0fce0;color:var(--green);">GF</div><div><div class="member-name">Greg Flash</div><div class="member-phone">You · Group admin</div></div><div class="member-badge mb-you">Admin</div></div>
+          <div class="member-row"><div class="member-avatar" style="background:#e0f0ff;color:#1a56f0;">TM</div><div><div class="member-name">Thabo Mokoena</div><div class="member-phone">+27 82 345 6789</div></div>
+            <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+              <div class="member-badge mb-inv">Invited</div>
+              <button onclick="sendWhatsApp('Thabo Mokoena','27823456789')" style="background:#25d366;border:none;border-radius:8px;padding:4px 8px;cursor:pointer;display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:#fff;font-family:Barlow,sans-serif;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.118 1.522 5.855L.057 23.882l6.173-1.447A11.943 11.943 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.815 9.815 0 0 1-5.001-1.372l-.36-.214-3.664.86.902-3.551-.235-.375A9.818 9.818 0 0 1 2.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
+                Remind
+              </button>
+            </div>
+          </div>
+          <div class="member-row"><div class="member-avatar" style="background:#fdf4ff;color:#9333ea;">NZ</div><div><div class="member-name">Nomsa Zulu</div><div class="member-phone">+27 71 234 5678</div></div>
+            <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+              <div class="member-badge mb-inv">Invited</div>
+              <button onclick="sendWhatsApp('Nomsa Zulu','27712345678')" style="background:#25d366;border:none;border-radius:8px;padding:4px 8px;cursor:pointer;display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:#fff;font-family:Barlow,sans-serif;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.118 1.522 5.855L.057 23.882l6.173-1.447A11.943 11.943 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.815 9.815 0 0 1-5.001-1.372l-.36-.214-3.664.86.902-3.551-.235-.375A9.818 9.818 0 0 1 2.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
+                Remind
+              </button>
+            </div>
+          </div>
+          <div class="member-add" id="add-member-btn" onclick="addMember()"><div class="add-circle"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><span>Add from contacts</span></div>
+        </div>
+
+        <!-- WhatsApp info note -->
+        <div style="margin:10px 20px 0;padding:10px 12px;background:#f0fdf4;border-radius:10px;border:1px solid #b6e880;display:flex;align-items:flex-start;gap:8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#25d366" style="flex-shrink:0;margin-top:1px;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.118 1.522 5.855L.057 23.882l6.173-1.447A11.943 11.943 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.815 9.815 0 0 1-5.001-1.372l-.36-.214-3.664.86.902-3.551-.235-.375A9.818 9.818 0 0 1 2.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
+          <span style="font-size:12px;color:#3a7d00;line-height:1.5;">Each invited member gets a <strong>WhatsApp message</strong> with a link to sign up for PJN and join your stokvel. Tap <strong>Remind</strong> to send them a nudge.</span>
+        </div>
+
+        <div class="disc" id="mem-disc">Add all members before continuing.</div>
+        <button class="btn-lime" id="btn-members-next" onclick="closeOv('ov-new-stokvel-3');openOv('ov-new-stokvel-4')" disabled>Next →</button>
+        <button class="btn-ghost" onclick="closeOv('ov-new-stokvel-3');openOv('ov-new-stokvel-2')">← Back</button>
+      </div>
+    </div>
+
+    <!-- ══ OVERLAY: STEP 4 — CONFIRM ══ -->
+    <div class="overlay" id="ov-new-stokvel-4">
+      <div class="sheet">
+        <div class="handle"></div>
+        <div class="sheet-title">Start a Stokvel</div>
+        <div style="text-align:center;padding:0 20px 12px;border-bottom:1px solid #eee;">
+          <span id="confirm-type-badge" class="type-badge-header">—</span>
+        </div>
+        <div class="wizard-steps">
+          <div class="wstep done"><div class="wstep-dot">✓</div><div class="wstep-lbl">Type</div></div>
+          <div class="wstep done"><div class="wstep-dot">✓</div><div class="wstep-lbl">Setup</div></div>
+          <div class="wstep done"><div class="wstep-dot">✓</div><div class="wstep-lbl">Members</div></div>
+          <div class="wstep active"><div class="wstep-dot">4</div><div class="wstep-lbl">Confirm</div></div>
+        </div>
+        <div class="flow-box" style="margin-top:14px;">
+          <div class="f-row"><label>Stokvel name</label><span class="f-val" id="conf-name">—</span></div>
+          <div class="f-row"><label>Type</label><span class="f-val" id="conf-type">—</span></div>
+          <div class="f-hr"></div>
+          <div class="f-row"><label>Monthly contribution</label><span class="f-val green" id="conf-amount">—</span></div>
+          <div class="f-row"><label>Members</label><span class="f-val" id="conf-members">—</span></div>
+          <div class="f-row"><label>Monthly pool total</label><span class="f-val" id="conf-pool">—</span></div>
+          <div class="f-hr"></div>
+          <div class="f-row"><label>Pool earns (Smart Saver)</label><span class="f-val green">~8.6% p.a.</span></div>
+          <div class="f-hr"></div>
+          <div class="f-row"><label>Fee on deposits</label><span class="f-val">1% per contribution</span></div>
+          <div class="f-row"><label>Fee on payouts</label><span class="f-val">1% per payout</span></div>
+          <div class="f-row"><label>Upfront / subscription fee</label><span class="f-val green">None</span></div>
+          <div class="f-row"><label>First debit</label><span class="f-val">1 June 2026</span></div>
+        </div>
+        <div class="disc">By confirming you agree to the Stokvel rules. Monthly contributions auto-debit from your PJN Wallet. A 1% fee applies to each deposit and each payout. No upfront or subscription fees. Pool is invested via Vault22 Smart Saver — an investment, not a bank deposit.</div>
+        <button class="btn-lime" onclick="confirmStokvel()">Confirm & Start Stokvel</button>
+        <button class="btn-ghost" onclick="closeOv('ov-new-stokvel-4');openOv('ov-new-stokvel-3')">← Back</button>
+      </div>
+    </div>
+
+    <!-- ══ OVERLAY: SUCCESS ══ -->
+    <div class="overlay" id="ov-stokvel-success">
+      <div class="sheet">
+        <div class="handle"></div>
+        <div class="succ-body">
+          <div class="succ-ring"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="succ-title">Stokvel created! 🎉</div>
+          <div class="succ-sub" id="succ-stokvel-sub">Invites sent. Your stokvel starts earning once members join.</div>
+          <div class="succ-card">
+            <div class="f-row"><label>Name</label><span class="f-val" id="succ-stokvel-name">—</span></div>
+            <div class="f-row"><label>Type</label><span class="f-val" id="succ-stokvel-type">—</span></div>
+            <div class="f-row"><label>Pool earns</label><span class="f-val green">8.6% p.a. via Smart Saver</span></div>
+            <div class="f-row"><label>Fees</label><span class="f-val">1% on deposits & payouts</span></div>
+            <div class="f-row"><label>First debit</label><span class="f-val">1 June 2026</span></div>
+          </div>
+        </div>
+        <button class="btn-lime" style="margin-top:20px;" onclick="closeAllOv();go('scr-stokvel')">View My Stokvels</button>
+      </div>
+    </div>
+
+    <!-- ══ OVERLAY: CONTRIBUTE ══ -->
+    <div class="overlay" id="ov-contribute">
+      <div class="sheet">
+        <div class="handle"></div>
+        <div class="sheet-title">Monthly Contribution</div>
+        <div class="sheet-sub">May 2026 · Kasi Savers</div>
+        <div class="amt-row"><span class="amt-pfx">R</span><input class="amt-inp" value="350" readonly style="color:#bbb;"></div>
+        <div class="amt-hint">Fixed at R350/month · Auto-debited from your PJN Wallet</div>
+        <div class="flow-box">
+          <div class="f-row"><label>From</label><span class="f-val">PJN Wallet</span></div>
+          <div class="f-row"><label>To</label><span class="f-val">Kasi Savers pool</span></div>
+          <div class="f-hr"></div>
+          <div class="f-row"><label>Your contribution</label><span class="f-val">R350.00</span></div>
+          <div class="f-row"><label>Deposit fee (1%)</label><span class="f-val">R3.50</span></div>
+          <div class="f-row"><label>Amount invested in pool</label><span class="f-val green">R346.50</span></div>
+          <div class="f-hr"></div>
+          <div class="f-row"><label>Pool total after payment</label><span class="f-val green">R4,158.00</span></div>
+          <div class="f-row"><label>Earning in Smart Saver</label><span class="f-val green">~8.6% p.a.</span></div>
+        </div>
+        <div class="disc">1% deposit fee applies to each contribution. No upfront fees, no subscription fees. This month's payout goes to Thabo Mokoena. Your turn is Month 7.</div>
+        <button class="btn-lime" onclick="closeOv('ov-contribute');openOv('ov-contribute-success')">Confirm Payment</button>
+        <button class="btn-ghost" onclick="closeOv('ov-contribute')">Cancel</button>
+      </div>
+    </div>
+
+    <!-- ══ OVERLAY: CONTRIBUTE SUCCESS ══ -->
+    <div class="overlay" id="ov-contribute-success">
+      <div class="sheet">
+        <div class="handle"></div>
+        <div class="succ-body">
+          <div class="succ-ring"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="succ-title">Contributed! ✓</div>
+          <div class="succ-sub">R350 added to the Kasi Savers pool. Earning in Smart Saver now.</div>
+          <div class="succ-card">
+            <div class="f-row"><label>Pool total</label><span class="f-val green">R4,200</span></div>
+            <div class="f-row"><label>This month's payout</label><span class="f-val">Thabo Mokoena</span></div>
+            <div class="f-row"><label>Your turn</label><span class="f-val">Month 7</span></div>
+          </div>
+        </div>
+        <button class="btn-lime" style="margin-top:20px;" onclick="closeAllOv()">Done</button>
+      </div>
+    </div>
+
+    <!-- ══ OVERLAY: PERSONAL SS SWEEP IN ══ -->
+    <div class="overlay" id="ov-ss-in">
+      <div class="sheet">
+        <div class="handle"></div>
+        <div class="sheet-title">Sweep In to Smart Saver</div>
+        <div class="sheet-sub">From your PJN Wallet · Balance: R<span id="ss-in-wallet-bal">200.00</span></div>
+        <div class="amt-row">
+          <span class="amt-pfx">R</span>
+          <input class="amt-inp" id="ss-in-amt" type="number" placeholder="0" min="100" oninput="calcSSIn()">
+        </div>
+        <div class="amt-hint" id="ss-in-hint">Minimum R100</div>
+        <div class="flow-box" id="ss-in-preview" style="display:none;">
+          <div class="f-row"><label>From</label><span class="f-val">PJN Wallet</span></div>
+          <div class="f-row"><label>To</label><span class="f-val">Smart Saver</span></div>
+          <div class="f-hr"></div>
+          <div class="f-row"><label>Deposit fee (0.5%)</label><span class="f-val" id="ss-in-fee">R0.00</span></div>
+          <div class="f-row"><label>Net invested</label><span class="f-val green" id="ss-in-net">R0.00</span></div>
+          <div class="f-row"><label>Projected return (1yr)</label><span class="f-val green" id="ss-in-proj">R0.00</span></div>
+        </div>
+        <div class="disc">A 0.5% fee applies on sweep in and sweep out. Smart Saver is an investment, not a bank deposit. Capital is not guaranteed. Returns can vary. Managed by Vault22 (FSP 55724).</div>
+        <button class="btn-lime" id="ss-in-btn" onclick="confirmSSIn()" disabled>Confirm Sweep In</button>
+        <button class="btn-ghost" onclick="closeOv('ov-ss-in')">Cancel</button>
+      </div>
+    </div>
+
+    <!-- ══ OVERLAY: PERSONAL SS SWEEP IN CONFIRM ══ -->
+    <div class="overlay" id="ov-ss-in-confirm">
+      <div class="sheet">
+        <div class="handle"></div>
+        <div style="width:70px;height:70px;background:#f0fce0;border:2px solid #3a7d00;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:22px auto 14px;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3a7d00" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="20"/><polyline points="5 13 12 20 19 13"/></svg>
+        </div>
+        <div id="ss-conf-amt" style="font-size:34px;font-weight:900;text-align:center;padding:0 20px 4px;"></div>
+        <div style="font-size:13px;color:#888;text-align:center;padding:0 20px 18px;">will be swept into your Smart Saver</div>
+        <div class="flow-box">
+          <div class="f-row"><label>Deposit fee (0.5%)</label><span class="f-val" id="ss-conf-fee"></span></div>
+          <div class="f-row"><label>Net invested</label><span class="f-val green" id="ss-conf-net"></span></div>
+          <div class="f-row"><label>Projected return (1yr)</label><span class="f-val green" id="ss-conf-proj"></span></div>
+        </div>
+        <div class="disc">By confirming you acknowledge this is an investment. Capital not guaranteed. Powered by Vault22 (FSP 55724).</div>
+        <button class="btn-lime" onclick="execSSIn()">Confirm</button>
+        <button class="btn-ghost" onclick="closeOv('ov-ss-in-confirm');openOv('ov-ss-in')">Go back</button>
+      </div>
+    </div>
+
+    <!-- ══ OVERLAY: PERSONAL SS SWEEP OUT ══ -->
+    <div class="overlay" id="ov-ss-out">
+      <div class="sheet">
+        <div class="handle"></div>
+        <div class="sheet-title">Sweep Out to Wallet</div>
+        <div class="sheet-sub">Withdraw from Smart Saver · Available: R<span id="ss-out-avail">0.00</span></div>
+        <div class="amt-row">
+          <span class="amt-pfx">R</span>
+          <input class="amt-inp" id="ss-out-amt" type="number" placeholder="0" min="1" oninput="calcSSOut()">
+        </div>
+        <div class="amt-hint" id="ss-out-hint">Enter amount to withdraw</div>
+        <div class="flow-box" id="ss-out-preview" style="display:none;">
+          <div class="f-row"><label>From</label><span class="f-val">Smart Saver</span></div>
+          <div class="f-row"><label>To</label><span class="f-val">PJN Wallet</span></div>
+          <div class="f-hr"></div>
+          <div class="f-row"><label>Withdrawal amount</label><span class="f-val" id="ss-out-disp">R0.00</span></div>
+          <div class="f-row"><label>Withdrawal fee (0.5%)</label><span class="f-val" id="ss-out-fee">R0.00</span></div>
+          <div class="f-row"><label>You receive</label><span class="f-val green" id="ss-out-net">R0.00</span></div>
+          <div class="f-row"><label>Estimated arrival</label><span class="f-val green">Next business day</span></div>
+        </div>
+        <div class="disc">A 0.5% withdrawal fee applies. Processed within 24 hours on business days. No other penalties.</div>
+        <button class="btn-lime" id="ss-out-btn" onclick="execSSOut()" disabled>Confirm Withdrawal</button>
+        <button class="btn-ghost" onclick="closeOv('ov-ss-out')">Cancel</button>
+      </div>
+    </div>
+
+    <!-- ══ OVERLAY: PERSONAL SS SUCCESS ══ -->
+    <div class="overlay" id="ov-ss-success">
+      <div class="sheet">
+        <div class="handle"></div>
+        <div class="succ-body">
+          <div class="succ-ring"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="succ-title" id="ss-succ-title">Swept in!</div>
+          <div class="succ-sub" id="ss-succ-sub">Your funds are now earning ~8.6% p.a.</div>
+          <div class="succ-card">
+            <div class="f-row"><label>Smart Saver balance</label><span class="f-val green" id="ss-succ-bal"></span></div>
+            <div class="f-row" id="ss-succ-extra" style="display:none;"><label id="ss-succ-xl"></label><span class="f-val" id="ss-succ-xv"></span></div>
+            <div class="f-row"><label>Wallet balance</label><span class="f-val" id="ss-succ-wallet"></span></div>
+          </div>
+        </div>
+        <button class="btn-lime" style="margin-top:20px;" onclick="closeAllOv()">Done</button>
+      </div>
+    </div>
+
+    <!-- ══ VIDEO MODAL ══ -->
+    <div class="video-modal" id="video-modal">
+      <button class="vm-close" onclick="closeVideo()">✕</button>
+      <div class="vm-title" id="vm-title">How Rotational works</div>
+      <div class="vm-canvas">
+        <canvas id="anim-canvas" width="640" height="440" style="width:320px;height:220px;"></canvas>
+      </div>
+      <div class="vm-desc" id="vm-desc">Loading...</div>
+      <button class="vm-cta" onclick="closeVideo();document.getElementById('btn-type-next').disabled=false;">Got it — choose this type</button>
+    </div>
+
+  </div><!-- /phone -->
+</div>
+
+<script>
+/* =========== STATE =========== */
+var selectedType = null;
+var addedMembers = 2;
+var stokvels = [{ name:'Kasi Savers', type:'Rotational', amount:350, members:12, emoji:'\uD83C\uDFD8\uFE0F' }];
+
+/* =========== NAV =========== */
+function go(id) {
+  closeAllOv();
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+}
+function openOv(id) {
+  document.getElementById(id).classList.add('open');
+  updateTypeBadges();
+  updateConfirmSheet();
+}
+function closeOv(id) { document.getElementById(id).classList.remove('open'); }
+function closeAllOv() { document.querySelectorAll('.overlay').forEach(function(o){ o.classList.remove('open'); }); }
+
+/* =========== TYPE SELECTION =========== */
+function selectType(t) {
+  selectedType = t;
+  document.getElementById('tile-rosca').classList.toggle('selected', t === 'rosca');
+  document.getElementById('tile-asca').classList.toggle('selected', t === 'asca');
+  document.getElementById('btn-type-next').disabled = false;
+  var ex = document.getElementById('type-explainer');
+  if (t === 'rosca') {
+    ex.innerHTML = '<strong style="color:#3a7d00;">Rotational — Merry-go-round.</strong> Each month the full pool goes to one member. When it\'s your turn you get a big lump sum — great for big purchases or emergencies.';
+  } else {
+    ex.innerHTML = '<strong style="color:#1a56f0;">Savings / Investment — Group savings account.</strong> Everyone saves together all year. At year-end, each person gets their money back plus their share of the interest.';
+  }
+  updateTypeBadges();
+}
+
+function updateTypeBadges() {
+  var label = selectedType === 'rosca' ? '\uD83D\uDD04 Rotational' : selectedType === 'asca' ? '\uD83D\uDCC8 Savings / Invest' : '— select type';
+  var cls = selectedType === 'rosca' ? 'rosca' : selectedType === 'asca' ? 'asca' : '';
+  ['setup-type-badge','members-type-badge','confirm-type-badge'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) { el.textContent = label; el.className = 'type-badge-header ' + cls; }
+  });
+}
+
+/* =========== SETUP VALIDATION =========== */
+function checkSetup() {
+  var name = (document.getElementById('stokvel-name').value || '').trim();
+  var amt = parseFloat(document.getElementById('stokvel-amount').value) || 0;
+  var mems = parseInt(document.getElementById('stokvel-members').value) || 0;
+  document.getElementById('btn-setup-next').disabled = !(name.length > 1 && amt >= 200 && mems >= 2 && mems <= 20);
+}
+
+/* =========== CONFIRM SHEET =========== */
+function updateConfirmSheet() {
+  var name = (document.getElementById('stokvel-name') && document.getElementById('stokvel-name').value) || '';
+  var amt = parseFloat((document.getElementById('stokvel-amount') && document.getElementById('stokvel-amount').value)) || 0;
+  var mems = parseInt((document.getElementById('stokvel-members') && document.getElementById('stokvel-members').value)) || 0;
+  var typeLabel = selectedType === 'asca' ? 'Savings / Investment — shared year-end' : 'Rotational — rotating payout';
+  var pool = amt * mems;
+  if (document.getElementById('conf-name')) {
+    document.getElementById('conf-name').textContent = name || '—';
+    document.getElementById('conf-type').textContent = selectedType ? typeLabel : '—';
+    document.getElementById('conf-amount').textContent = amt ? 'R' + amt + '/month' : '—';
+    document.getElementById('conf-members').textContent = mems ? mems + ' members' : '—';
+    document.getElementById('conf-pool').textContent = pool ? 'R' + pool.toLocaleString() + '/month' : '—';
+  }
+}
+
+/* =========== CONFIRM STOKVEL =========== */
+function confirmStokvel() {
+  var name = (document.getElementById('stokvel-name').value || '').trim() || 'My Stokvel';
+  var amt = parseFloat(document.getElementById('stokvel-amount').value) || 350;
+  var mems = parseInt(document.getElementById('stokvel-members').value) || 10;
+  var emoji = selectedType === 'asca' ? '\uD83D\uDCC8' : '\uD83D\uDD04';
+  var typeLabel = selectedType === 'asca' ? 'Savings / Investment' : 'Rotational';
+
+  // add to stokvels array
+  stokvels.push({ name: name, type: typeLabel, amount: amt, members: mems, emoji: emoji });
+
+  // inject new card into stokvels screen
+  injectNewStokvelCard(name, typeLabel, amt, mems, emoji);
+
+  // update accounts card
+  updateAccountsCard();
+
+  // show success
+  closeAllOv();
+  document.getElementById('succ-stokvel-name').textContent = name;
+  document.getElementById('succ-stokvel-type').textContent = typeLabel + (selectedType === 'asca' ? ' — shared year-end' : ' — rotating payout');
+  document.getElementById('succ-stokvel-sub').textContent = mems + ' members invited via WhatsApp. Your stokvel starts earning once everyone joins.';
+  document.getElementById('ov-stokvel-success').classList.add('open');
+
+  // reset form
+  document.getElementById('stokvel-name').value = '';
+  document.getElementById('stokvel-amount').value = '';
+  document.getElementById('stokvel-members').value = '';
+  selectedType = null;
+  document.getElementById('tile-rosca').classList.remove('selected');
+  document.getElementById('tile-asca').classList.remove('selected');
+  document.getElementById('btn-type-next').disabled = true;
+  document.getElementById('btn-setup-next').disabled = true;
+  document.getElementById('type-explainer').innerHTML = '<strong>Not sure?</strong> Tap a type above to learn more, or watch the short explainer video.';
+}
+
+function injectNewStokvelCard(name, typeLabel, amt, mems, emoji) {
+  var area = document.getElementById('new-stokvels-area');
+  var isAsca = typeLabel === 'Savings / Investment';
+  var badgeColor = isAsca ? 'background:#eff6ff;color:#1a56f0;' : 'background:#f0fce0;color:#3a7d00;';
+  var pool = (amt * mems).toLocaleString();
+  var card = document.createElement('div');
+  card.className = 'stokvel-card';
+  card.style.cssText = 'cursor:pointer;animation:slideUp 0.3s ease;';
+  card.innerHTML =
+    '<div class="sc-top">' +
+      '<div><div class="sc-emoji">'+emoji+'</div><div class="sc-name">'+name+'</div><div class="sc-meta">'+typeLabel+' · '+mems+' members · R'+amt+'/month</div></div>' +
+      '<span class="chip" style="'+badgeColor+'font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;">Setting up</span>' +
+    '</div>' +
+    '<div class="sc-prog">' +
+      '<div class="sc-prog-row"><span>Group pool</span><span><strong>R0</strong> / R'+pool+'</span></div>' +
+      '<div class="prog-track"><div class="prog-fill" style="width:0%"></div></div>' +
+      '<div style="font-size:11px;color:#aaa;">Waiting for members to join</div>' +
+    '</div>' +
+    '<div class="sc-stats">' +
+      '<div class="sc-stat"><div class="sv">R'+amt+'</div><div class="sl">My monthly</div></div>' +
+      '<div class="sc-stat"><div class="sv">'+mems+'</div><div class="sl">Members</div></div>' +
+      '<div class="sc-stat"><div class="sv green">8.6%</div><div class="sl">Earning p.a.</div></div>' +
+    '</div>';
+  area.appendChild(card);
+
+  // Also add mini card to landing screen
+  var landingArea = document.getElementById('landing-stokvels-list');
+  if (landingArea) {
+    var lcard = document.createElement('div');
+    lcard.className = 'stokvel-card';
+    lcard.style.cursor = 'pointer';
+    lcard.onclick = function(){ go('scr-stokvel'); };
+    lcard.innerHTML =
+      '<div class="sc-top">' +
+        '<div><div class="sc-emoji">'+emoji+'</div><div class="sc-name">'+name+'</div>' +
+        '<div class="sc-meta">'+typeLabel+' · '+mems+' members · R'+amt+'/month</div></div>' +
+        '<span class="chip chip-grey">Setting up</span>' +
+      '</div>' +
+      '<div class="sc-stats">' +
+        '<div class="sc-stat"><div class="sv">R'+amt+'</div><div class="sl">My monthly</div></div>' +
+        '<div class="sc-stat"><div class="sv">'+mems+'</div><div class="sl">Members</div></div>' +
+        '<div class="sc-stat"><div class="sv green">8.6%</div><div class="sl">Earning p.a.</div></div>' +
+      '</div>';
+    landingArea.appendChild(lcard);
+  }
+}
+
+function updateAccountsCard() {
+  var total = stokvels.length;
+  var totalAmt = stokvels.reduce(function(s, v){ return s + v.amount; }, 0);
+  document.getElementById('acct-count').textContent = total + ' Active';
+  document.getElementById('acct-contrib').textContent = 'R' + totalAmt + '/mo';
+}
+
+/* =========== ADD MEMBER (with count enforcement) =========== */
+function getTargetMembers() {
+  return parseInt(document.getElementById('stokvel-members').value) || 2;
+}
+
+function updateMemberProgress() {
+  var target  = getTargetMembers();
+  var invited = addedMembers; // includes "You"
+  var needed  = Math.max(0, target - invited);
+  var pct     = Math.min(100, Math.round((invited / target) * 100));
+
+  var lbl  = document.getElementById('mem-progress-label');
+  var need = document.getElementById('mem-still-needed');
+  var bar  = document.getElementById('mem-progress-bar');
+  var hint = document.getElementById('mem-progress-hint');
+  var disc = document.getElementById('mem-disc');
+  var btn  = document.getElementById('btn-members-next');
+
+  if (!lbl) return;
+
+  // Don't count "You" as an invite — show (invited-1) invited others
+  lbl.textContent  = 'Invited ' + (invited - 1) + ' of ' + (target - 1) + ' other members';
+  bar.style.width  = pct + '%';
+
+  if (needed > 0) {
+    need.textContent = needed + ' still needed';
+    need.style.color = '#b45309';
+    hint.textContent = 'Add ' + needed + ' more member' + (needed > 1 ? 's' : '') + ' to continue';
+    disc.textContent = 'You need ' + target + ' members total. Add ' + needed + ' more.';
+    btn.disabled = true;
+  } else {
+    need.textContent = 'All members added ✓';
+    need.style.color = '#3a7d00';
+    hint.textContent = 'All ' + target + ' members invited. Ready to continue!';
+    disc.textContent = 'Each member will receive a WhatsApp invite to sign up and join.';
+    btn.disabled = false;
+  }
+}
+
+function addMember() {
+  addedMembers++;
+  var allNames   = ['Lerato M.','Sipho K.','Palesa D.','Bongani N.','Thandi V.','Moses D.'];
+  var allPhones  = ['+27 83 456 7890','+27 72 567 8901','+27 61 678 9012','+27 84 789 0123','+27 73 890 1234','+27 82 901 2345'];
+  var rawNums    = ['27834567890','27725678901','27616789012','27847890123','27738901234','27829012345'];
+  var colors     = [['#fef3c7','#b45309'],['#f0fdf4','#3a7d00'],['#fdf4ff','#9333ea'],['#fff0f0','#e53935'],['#e0f0ff','#1a56f0'],['#fff8f0','#c2410c']];
+  var idx        = (addedMembers - 3) % allNames.length;
+  var name       = allNames[idx];
+  var phone      = allPhones[idx];
+  var rawNum     = rawNums[idx];
+  var initials   = name.split(' ').map(function(w){ return w[0]; }).join('');
+
+  var waBtn = '<button onclick="sendWhatsApp(\'' + name + '\',\'' + rawNum + '\')" style="background:#25d366;border:none;border-radius:8px;padding:4px 8px;cursor:pointer;display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:#fff;font-family:Barlow,sans-serif;"><svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.118 1.522 5.855L.057 23.882l6.173-1.447A11.943 11.943 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.815 9.815 0 0 1-5.001-1.372l-.36-.214-3.664.86.902-3.551-.235-.375A9.818 9.818 0 0 1 2.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>Remind</button>';
+
+  var row = document.createElement('div');
+  row.className = 'member-row';
+  row.innerHTML =
+    '<div class="member-avatar" style="background:'+colors[idx][0]+';color:'+colors[idx][1]+';">'+initials+'</div>' +
+    '<div><div class="member-name">'+name+'</div><div class="member-phone">'+phone+'</div></div>' +
+    '<div style="margin-left:auto;display:flex;align-items:center;gap:6px;">' +
+      '<div class="member-badge mb-inv">Invited</div>' + waBtn +
+    '</div>';
+  document.getElementById('add-member-btn').before(row);
+  updateMemberProgress();
+}
+
+function sendWhatsApp(name, phone) {
+  var senderName = 'Greg Flash';
+  var groupName = (document.getElementById('stokvel-name') && document.getElementById('stokvel-name').value) || 'our Stokvel';
+  var amt = (document.getElementById('stokvel-amount') && document.getElementById('stokvel-amount').value) || '350';
+  var msg = 'Hi ' + name.split(' ')[0] + '! \uD83D\uDC4B\n\n' +
+    senderName + ' has invited you to join *' + groupName + '* on PayJustNow.\n\n' +
+    '\uD83D\uDCB0 Monthly contribution: R' + amt + '\n' +
+    '\uD83D\uDCC8 Your savings earn ~8.6% p.a. in Smart Saver\n' +
+    '\uD83D\uDD12 No cash — fully digital and secure\n\n' +
+    'To join, download the PayJustNow app and sign up:\n' +
+    '\uD83D\uDC49 https://payjustnow.com/app\n\n' +
+    'Once you are signed up, your invite will be waiting for you!';
+  var waUrl = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
+  window.open(waUrl, '_blank');
+}
+
+/* =======================================
+   ANIMATED EXPLAINER VIDEOS (canvas)
+======================================= */
+var animFrame = null;
+var animStart = null;
+var currentVideo = null;
+
+function openVideo(type) {
+  currentVideo = type;
+  document.getElementById('video-modal').classList.add('open');
+  if (type === 'rosca') {
+    document.getElementById('vm-title').textContent = 'How Rotational works';
+    document.getElementById('vm-desc').textContent = 'Each member puts in the same amount each month. The full pot rotates to one member at a time — like a merry-go-round. Everyone gets a big payout on their turn.';
+  } else {
+    document.getElementById('vm-title').textContent = 'How Savings / Investment works';
+    document.getElementById('vm-desc').textContent = 'Everyone saves into one shared pot all year. The pot earns interest in Smart Saver. At year-end everyone gets their savings back plus their share of the interest.';
+  }
+  cancelAnimationFrame(animFrame);
+  animStart = null;
+  requestAnimationFrame(type === 'rosca' ? animROSCA : animASCA);
+}
+
+function closeVideo() {
+  document.getElementById('video-modal').classList.remove('open');
+  cancelAnimationFrame(animFrame);
+  animStart = null;
+  var ctx = document.getElementById('anim-canvas').getContext('2d');
+  ctx.clearRect(0,0,W,H);
+}
+
+var LIME = '#b8e000';
+var GREEN = '#3a7d00';
+var NAVY = '#0d0d0d';
+var BLUE = '#1a56f0';
+var GREY = '#e5e5e5';
+var W = 640; var H = 440; var DPR = 2;
+
+/* ── ROTATIONAL animation ── Two phases per month cycle:
+   Phase A (60%): all 6 members contribute inward to pool
+   Phase B (40%): pool pays out to this month's receiver
+   Cycles through all 6 receivers over the full 12s loop ── */
+function animROSCA(ts) {
+  if (!animStart) animStart = ts;
+  var elapsed = (ts - animStart) / 12000; // 0..∞, 12s per full loop
+  var t = elapsed % 1; // 0..1 within current loop
+
+  var ctx = document.getElementById('anim-canvas').getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  var cx = W / 2; var cy = H / 2 - 30;
+  var r = 148;
+  var members = 6;
+  var colors  = ['#f87171','#fb923c','#fbbf24','#34d399','#60a5fa','#a78bfa'];
+  var names   = ['You','Sipho','Nomsa','Thabo','Lerato','Palesa'];
+  var monthly = 350;
+  var poolAmt = monthly * members;
+
+  // Current receiver rotates each full loop
+  var loopCount  = Math.floor(elapsed);
+  var receiver   = loopCount % members;
+
+  // Phase split: 0.0–0.55 = contributions in, 0.55–1.0 = payout out
+  var PHASE_SPLIT = 0.55;
+  var isContribPhase = t < PHASE_SPLIT;
+  var phaseP = isContribPhase
+    ? t / PHASE_SPLIT               // 0→1 during contrib phase
+    : (t - PHASE_SPLIT) / (1 - PHASE_SPLIT); // 0→1 during payout phase
+
+  /* ── Draw all connector lines first (behind circles) ── */
+  for (var i = 0; i < members; i++) {
+    var angle = (i / members) * Math.PI * 2 - Math.PI / 2;
+    var mx = cx + Math.cos(angle) * r;
+    var my = cy + Math.sin(angle) * r;
+    ctx.beginPath();
+    ctx.moveTo(mx, my);
+    ctx.lineTo(cx, cy);
+    ctx.strokeStyle = '#2a2a2a';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  /* ── PHASE A: contribution pulses travel from each member → pool ── */
+  if (isContribPhase) {
+    // Stagger each member: member i starts at i/members * 0.5 into phase
+    for (var i = 0; i < members; i++) {
+      var angle = (i / members) * Math.PI * 2 - Math.PI / 2;
+      var mx = cx + Math.cos(angle) * r;
+      var my = cy + Math.sin(angle) * r;
+      var stagger = (i / members) * 0.5;
+      var dotP = (phaseP - stagger) / (1 - stagger);
+      if (dotP > 0 && dotP <= 1) {
+        // dot travels from member → pool
+        var dx = mx + (cx - mx) * dotP;
+        var dy = my + (cy - my) * dotP;
+        // draw trail
+        ctx.beginPath();
+        ctx.moveTo(mx, my);
+        ctx.lineTo(dx, dy);
+        ctx.strokeStyle = colors[i];
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        // draw dot
+        ctx.beginPath();
+        ctx.arc(dx, dy, 12, 0, Math.PI * 2);
+        ctx.fillStyle = colors[i];
+        ctx.fill();
+        // R label on dot
+        ctx.font = 'bold 14px Barlow, sans-serif';
+        ctx.fillStyle = '#000';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('R'+monthly, dx, dy);
+      }
+    }
+  }
+
+  /* ── PHASE B: payout dot travels from pool → receiver ── */
+  if (!isContribPhase) {
+    var recAngle = (receiver / members) * Math.PI * 2 - Math.PI / 2;
+    var rmx = cx + Math.cos(recAngle) * r;
+    var rmy = cy + Math.sin(recAngle) * r;
+    // ease in-out
+    var ease = phaseP < 0.5
+      ? 2 * phaseP * phaseP
+      : 1 - Math.pow(-2 * phaseP + 2, 2) / 2;
+    var pdx = cx + (rmx - cx) * ease;
+    var pdy = cy + (rmy - cy) * ease;
+    // bright trail
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(pdx, pdy);
+    ctx.strokeStyle = LIME;
+    ctx.lineWidth = 6;
+    ctx.stroke();
+    // payout dot
+    ctx.beginPath();
+    ctx.arc(pdx, pdy, 16, 0, Math.PI * 2);
+    ctx.fillStyle = LIME;
+    ctx.fill();
+    ctx.font = 'bold 15px Barlow, sans-serif';
+    ctx.fillStyle = '#000';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('R'+poolAmt.toLocaleString(), pdx, pdy);
+  }
+
+  /* ── Draw pool centre circle ── */
+  ctx.beginPath();
+  ctx.arc(cx, cy, 58, 0, Math.PI * 2);
+  ctx.fillStyle = NAVY;
+  ctx.fill();
+  // pool fill ring shows how full it is during contrib phase
+  if (isContribPhase && phaseP > 0) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, 58, -Math.PI/2, -Math.PI/2 + phaseP * Math.PI * 2);
+    ctx.strokeStyle = LIME;
+    ctx.lineWidth = 6;
+    ctx.stroke();
+  }
+  ctx.font = 'bold 20px Barlow, sans-serif';
+  ctx.fillStyle = LIME;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('POOL', cx, cy - 14);
+  ctx.font = 'bold 18px Barlow, sans-serif';
+  ctx.fillStyle = '#fff';
+  ctx.fillText('R' + (isContribPhase ? Math.round(poolAmt * phaseP) : poolAmt).toLocaleString(), cx, cy + 14);
+
+  /* ── Draw member circles ── */
+  for (var i = 0; i < members; i++) {
+    var angle = (i / members) * Math.PI * 2 - Math.PI / 2;
+    var mx = cx + Math.cos(angle) * r;
+    var my = cy + Math.sin(angle) * r;
+    var isRec = (i === receiver);
+    var mR = isRec ? 42 : 30;
+
+    ctx.beginPath();
+    ctx.arc(mx, my, mR, 0, Math.PI * 2);
+    ctx.fillStyle = isRec ? colors[i] : '#1e1e1e';
+    ctx.fill();
+
+    if (isRec) {
+      // pulsing ring on receiver
+      ctx.beginPath();
+      ctx.arc(mx, my, mR + 8, 0, Math.PI * 2);
+      ctx.strokeStyle = LIME;
+      ctx.lineWidth = 4;
+      ctx.stroke();
+    }
+
+    ctx.font = (isRec ? 'bold 18px' : 'bold 16px') + ' Barlow, sans-serif';
+    ctx.fillStyle = isRec ? '#000' : '#888';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(names[i], mx, my - (isRec ? 6 : 0));
+    if (isRec) {
+      ctx.font = '13px Barlow, sans-serif';
+      ctx.fillStyle = '#1a3a00';
+      ctx.fillText('← turn', mx, my + 12);
+    }
+  }
+
+  /* ── Bottom caption ── */
+  ctx.font = 'bold 22px Barlow, sans-serif';
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  if (isContribPhase) {
+    ctx.fillText('Everyone contributes R' + monthly + ' this month', cx, H - 20);
+  } else {
+    ctx.fillStyle = LIME;
+    ctx.fillText(names[receiver] + ' receives R' + poolAmt.toLocaleString() + ' \uD83C\uDF89', cx, H - 20);
+  }
+
+  animFrame = requestAnimationFrame(animROSCA);
+}
+
+/* ── ASCA animation ── */
+function animASCA(ts) {
+  if (!animStart) animStart = ts;
+  var elapsed = (ts - animStart) / 1000; // seconds
+  var CYCLE = 14; // total cycle length
+  var t = (elapsed % CYCLE) / CYCLE;
+  var ctx = document.getElementById('anim-canvas').getContext('2d');
+  ctx.clearRect(0,0,W,H);
+
+  var members = 5;
+  var monthly = 300;
+  var months = 12;
+  var annualPool = monthly * members * months;
+  var interest = Math.round(annualPool * 0.086);
+  var phase = t < 0.6 ? 'saving' : 'payout'; // 60% saving, 40% payout
+
+  var barW = 68; var barMaxH = 220; var barY = 320; var startX = 60;
+
+  if (phase === 'saving') {
+    // show contributions growing month by month
+    var progress = t / 0.6; // 0→1 during saving phase
+    var currentMonth = Math.floor(progress * months);
+
+    // title
+    ctx.font = 'bold 22px Barlow, sans-serif';
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'left';
+    ctx.fillText('Month ' + (currentMonth + 1) + ' of 12 — Everyone saving...', 32, 44);
+
+    // draw member contribution bars
+    var barSpacing = (W - startX*2) / members;
+    var memberNames = ['You','Sipho','Nomsa','Thabo','Palesa'];
+    var memberColors = ['#b8e000','#60a5fa','#a78bfa','#fbbf24','#34d399'];
+
+    for (var i = 0; i < members; i++) {
+      var bx = startX + i * barSpacing + barSpacing/2 - barW/2;
+      var fillH = barMaxH * progress;
+
+      // bg bar
+      ctx.beginPath();
+      ctx.roundRect(bx, barY - barMaxH, barW, barMaxH, 5);
+      ctx.fillStyle = '#1a1a1a';
+      ctx.fill();
+
+      // fill bar
+      if (fillH > 0) {
+        ctx.beginPath();
+        ctx.roundRect(bx, barY - fillH, barW, fillH, 5);
+        ctx.fillStyle = memberColors[i];
+        ctx.fill();
+      }
+
+      // label
+      ctx.font = 'bold 18px Barlow, sans-serif';
+      ctx.fillStyle = '#aaa';
+      ctx.textAlign = 'center';
+      ctx.fillText(memberNames[i], bx + barW/2, barY + 28);
+
+      // amount
+      var saved = Math.round(monthly * progress * months);
+      ctx.font = 'bold 16px Barlow, sans-serif';
+      ctx.fillStyle = memberColors[i];
+      ctx.fillText('R'+(saved).toLocaleString(), bx + barW/2, Math.max(barY - fillH - 10, barY - barMaxH + 20));
+    }
+
+    // pool total
+    var poolSoFar = monthly * members * Math.round(progress * months);
+    ctx.font = 'bold 24px Barlow, sans-serif';
+    ctx.fillStyle = LIME;
+    ctx.textAlign = 'center';
+    ctx.fillText('Pool: R' + poolSoFar.toLocaleString(), W/2, H - 12);
+
+  } else {
+    // payout phase — show interest split
+    var payoutProgress = (t - 0.6) / 0.4;
+    ctx.font = 'bold 22px Barlow, sans-serif';
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.fillText('Year-end! Pool + interest shared', W/2, 44);
+
+    var perPerson = Math.round((annualPool + interest) / members);
+    var eachInterest = Math.round(interest / members);
+
+    var memberNames = ['You','Sipho','Nomsa','Thabo','Palesa'];
+    var memberColors = ['#b8e000','#60a5fa','#a78bfa','#fbbf24','#34d399'];
+    var barSpacing = (W - startX*2) / members;
+
+    for (var i = 0; i < members; i++) {
+      var bx = startX + i * barSpacing + barSpacing/2 - barW/2;
+      var fillH = barMaxH * payoutProgress;
+
+      ctx.beginPath();
+      ctx.roundRect(bx, barY - barMaxH, barW, barMaxH, 5);
+      ctx.fillStyle = '#1a1a1a';
+      ctx.fill();
+
+      if (fillH > 0) {
+        // base savings portion
+        var savingsH = (monthly * months / perPerson) * fillH;
+        ctx.beginPath();
+        ctx.roundRect(bx, barY - savingsH, barW, savingsH, 5);
+        ctx.fillStyle = memberColors[i];
+        ctx.fill();
+
+        // interest on top (lime)
+        var intH = fillH - savingsH;
+        if (intH > 2) {
+          ctx.beginPath();
+          ctx.roundRect(bx, barY - fillH, barW, intH, [5,5,0,0]);
+          ctx.fillStyle = LIME;
+          ctx.fill();
+        }
+      }
+
+      ctx.font = 'bold 18px Barlow, sans-serif';
+      ctx.fillStyle = '#aaa';
+      ctx.textAlign = 'center';
+      ctx.fillText(memberNames[i], bx + barW/2, barY + 28);
+
+      if (payoutProgress > 0.5) {
+        ctx.font = 'bold 18px Barlow, sans-serif';
+        ctx.fillStyle = '#fff';
+        ctx.fillText('R'+perPerson.toLocaleString(), bx + barW/2, barY - barMaxH - 12);
+      }
+    }
+
+    // legend
+    ctx.fillStyle = LIME; ctx.fillRect(32, H-44, 20, 20);
+    ctx.font = '20px Barlow, sans-serif'; ctx.fillStyle = '#aaa'; ctx.textAlign = 'left';
+    ctx.fillText('+R'+eachInterest+' interest each', 60, H-26);
+    ctx.fillStyle = '#555'; ctx.fillRect(W/2 + 20, H-44, 20, 20);
+    ctx.fillText('Savings back', W/2 + 48, H-26);
+  }
+
+  animFrame = requestAnimationFrame(animASCA);
+}
+
+/* ── Canvas roundRect polyfill ── */
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r) {
+    if (typeof r === 'number') r = [r,r,r,r];
+    this.beginPath();
+    this.moveTo(x+r[0], y);
+    this.lineTo(x+w-r[1], y);
+    this.quadraticCurveTo(x+w, y, x+w, y+r[1]);
+    this.lineTo(x+w, y+h-r[2]);
+    this.quadraticCurveTo(x+w, y+h, x+w-r[2], y+h);
+    this.lineTo(x+r[3], y+h);
+    this.quadraticCurveTo(x, y+h, x, y+h-r[3]);
+    this.lineTo(x, y+r[0]);
+    this.quadraticCurveTo(x, y, x+r[0], y);
+    this.closePath();
+  };
+}
+
+/* =========== PERSONAL SMART SAVER =========== */
+var ssPersonalBal  = 0;
+var ssWalletBal    = 200;
+var ssPendingIn    = 0;
+var ssPendingOut   = 0;
+
+function fmtR(n) { return 'R' + n.toFixed(2); }
+
+function updateSSDisplays() {
+  var el1 = document.getElementById('ss-personal-bal');
+  var el2 = document.getElementById('acct-ss-bal');
+  if (el1) el1.textContent = fmtR(ssPersonalBal);
+  if (el2) el2.textContent = fmtR(ssPersonalBal);
+  var wb = document.getElementById('ss-in-wallet-bal');
+  if (wb) wb.textContent = ssWalletBal.toFixed(2);
+}
+
+function openOvSS(id) {
+  // refresh wallet bal display before opening
+  var wb = document.getElementById('ss-in-wallet-bal');
+  if (wb) wb.textContent = ssWalletBal.toFixed(2);
+  var oa = document.getElementById('ss-out-avail');
+  if (oa) oa.textContent = ssPersonalBal.toFixed(2);
+  document.getElementById(id).classList.add('open');
+}
+
+// Override openOv for SS overlays to use our version
+var _origOpenOv = openOv;
+openOv = function(id) {
+  if (id === 'ov-new-stokvel-3') {
+    // reset added members to 3 (You + 2 pre-filled) when opening fresh
+    // but only reset if we're coming from step 2 (not back from step 4)
+    setTimeout(function(){ updateMemberProgress(); }, 50);
+  }
+  if (id === 'ov-ss-in') {
+    document.getElementById('ss-in-amt').value = '';
+    document.getElementById('ss-in-preview').style.display = 'none';
+    document.getElementById('ss-in-btn').disabled = true;
+    document.getElementById('ss-in-hint').textContent = 'Minimum R100';
+    openOvSS(id);
+  } else if (id === 'ov-ss-out') {
+    if (ssPersonalBal <= 0) { openOv('ov-ss-in'); return; }
+    document.getElementById('ss-out-amt').value = '';
+    document.getElementById('ss-out-preview').style.display = 'none';
+    document.getElementById('ss-out-btn').disabled = true;
+    document.getElementById('ss-out-hint').textContent = 'Enter amount to withdraw';
+    openOvSS(id);
+  } else {
+    _origOpenOv(id);
+  }
+};
+
+function calcSSIn() {
+  var v   = parseFloat(document.getElementById('ss-in-amt').value) || 0;
+  var btn = document.getElementById('ss-in-btn');
+  var prv = document.getElementById('ss-in-preview');
+  var hnt = document.getElementById('ss-in-hint');
+  if (v > ssWalletBal) {
+    hnt.textContent = 'Exceeds wallet balance (' + fmtR(ssWalletBal) + ')';
+    prv.style.display = 'none'; btn.disabled = true; return;
+  }
+  if (v >= 100) {
+    var fee  = +(v * 0.005).toFixed(2);
+    var net  = +(v - fee).toFixed(2);
+    var proj = +(net * 0.086).toFixed(2);
+    document.getElementById('ss-in-fee').textContent  = fmtR(fee);
+    document.getElementById('ss-in-net').textContent  = fmtR(net);
+    document.getElementById('ss-in-proj').textContent = '+' + fmtR(proj) + ' after 1yr';
+    prv.style.display = 'block'; btn.disabled = false; hnt.textContent = '';
+    ssPendingIn = net;
+  } else {
+    prv.style.display = 'none'; btn.disabled = true;
+    hnt.textContent = v > 0 ? 'Minimum is R100' : 'Minimum R100';
+  }
+}
+
+function confirmSSIn() {
+  var v    = parseFloat(document.getElementById('ss-in-amt').value) || 0;
+  var fee  = +(v * 0.005).toFixed(2);
+  var net  = +(v - fee).toFixed(2);
+  var proj = +(net * 0.086).toFixed(2);
+  document.getElementById('ss-conf-amt').textContent  = fmtR(v);
+  document.getElementById('ss-conf-fee').textContent  = fmtR(fee);
+  document.getElementById('ss-conf-net').textContent  = fmtR(net);
+  document.getElementById('ss-conf-proj').textContent = '+' + fmtR(proj) + ' after 1yr';
+  closeOv('ov-ss-in');
+  document.getElementById('ov-ss-in-confirm').classList.add('open');
+}
+
+function execSSIn() {
+  var v = parseFloat(document.getElementById('ss-in-amt').value) || 0;
+  ssWalletBal    = +(ssWalletBal - v).toFixed(2);
+  ssPersonalBal  = +(ssPersonalBal + ssPendingIn).toFixed(2); // ssPendingIn already net of 0.5% fee
+  updateSSDisplays();
+  closeOv('ov-ss-in-confirm');
+  document.getElementById('ss-succ-title').textContent = 'Swept in!';
+  document.getElementById('ss-succ-sub').textContent   = 'Your funds are now earning ~8.6% p.a. in Smart Saver.';
+  document.getElementById('ss-succ-bal').textContent   = fmtR(ssPersonalBal);
+  document.getElementById('ss-succ-extra').style.display = 'none';
+  document.getElementById('ss-succ-wallet').textContent  = fmtR(ssWalletBal);
+  document.getElementById('ov-ss-success').classList.add('open');
+}
+
+function calcSSOut() {
+  var v   = parseFloat(document.getElementById('ss-out-amt').value) || 0;
+  var btn = document.getElementById('ss-out-btn');
+  var prv = document.getElementById('ss-out-preview');
+  var hnt = document.getElementById('ss-out-hint');
+  if (v > ssPersonalBal) {
+    hnt.textContent = 'Exceeds Smart Saver balance (' + fmtR(ssPersonalBal) + ')';
+    prv.style.display = 'none'; btn.disabled = true; return;
+  }
+  if (v > 0) {
+    var outFee = +(v * 0.005).toFixed(2);
+    var outNet = +(v - outFee).toFixed(2);
+    document.getElementById('ss-out-disp').textContent = fmtR(v);
+    document.getElementById('ss-out-fee').textContent  = fmtR(outFee);
+    document.getElementById('ss-out-net').textContent  = fmtR(outNet);
+    prv.style.display = 'block'; btn.disabled = false; hnt.textContent = '';
+    ssPendingOut = outNet; // receive net amount in wallet
+  } else {
+    prv.style.display = 'none'; btn.disabled = true;
+  }
+}
+
+function execSSOut() {
+  var grossOut = parseFloat(document.getElementById('ss-out-amt').value) || 0;
+  ssPersonalBal = +(ssPersonalBal - grossOut).toFixed(2); // deduct gross from investment
+  ssWalletBal   = +(ssWalletBal + ssPendingOut).toFixed(2); // receive net (after 0.5% fee)
+  updateSSDisplays();
+  closeOv('ov-ss-out');
+  document.getElementById('ss-succ-title').textContent = 'Withdrawal submitted';
+  document.getElementById('ss-succ-sub').textContent   = fmtR(ssPendingOut) + ' will arrive in your PJN Wallet within 24 hours.';
+  document.getElementById('ss-succ-bal').textContent   = fmtR(ssPersonalBal);
+  document.getElementById('ss-succ-extra').style.display = 'flex';
+  document.getElementById('ss-succ-xl').textContent    = 'Arriving in Wallet';
+  document.getElementById('ss-succ-xv').textContent    = 'Next business day';
+  document.getElementById('ss-succ-wallet').textContent = fmtR(ssWalletBal) + ' (+ pending)';
+  document.getElementById('ov-ss-success').classList.add('open');
+}
+
+updateSSDisplays();
+</script>
+</body>
+</html>
